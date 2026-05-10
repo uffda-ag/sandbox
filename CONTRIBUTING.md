@@ -23,7 +23,7 @@ For self-contained mini-apps: games, calculators, explorers. Your HTML, your CSS
 - Tile loads in an iframe with `sandbox="allow-scripts allow-popups"`. No top-level navigation, no localStorage / cookies. Use `postMessage` to talk to the parent.
 - Keep the folder under **2 MB**. Larger payloads need a discussion in advance.
 - No third-party trackers, analytics scripts, or ad tags. UFFDA is ad-free; tiles inherit that.
-- Declare your license in `tile.json` (SPDX identifier). Approved iframe licenses: **MIT, Apache-2.0, BSD-3-Clause, CC-BY-4.0, CC-BY-SA-4.0, CC0-1.0**. AGPL/GPL not accepted on iframe tiles — copyleft-on-distribution doesn't compose cleanly with how UFFDA loads tiles. Tiles without a declared license won't merge.
+- Declare your license in `tile.json` (SPDX identifier). Approved iframe licenses: **MIT, Apache-2.0, BSD-3-Clause, CC-BY-4.0, CC-BY-SA-4.0, CC0-1.0, NOASSERTION**. AGPL/GPL not accepted on iframe tiles — copyleft-on-distribution doesn't compose cleanly with how UFFDA loads tiles. Tiles without a declared license won't merge. **NOASSERTION** is the SPDX value meaning "license uncertain" — fine for older code, Stack-Overflow-derived utilities, or anything where the lineage is genuinely unclear. Pair it with a `licenseNote` (best-effort note up to 280 chars) so users know what you do remember. Iframe tiles with NOASSERTION render with a "?" badge in the wrapper; users see the uncertainty up front.
 
 ### Example: Guess the Crop
 
@@ -49,7 +49,7 @@ For tools that need direct access to UFFDA's state — a calculator that reads t
 
 - Higher trust bar than iframe — your code runs in the main app context. Reviewers will read the diff line-by-line.
 - No new runtime dependencies without discussion. The main app ships React 18 + Next.js 14 + MapLibre + Tailwind already.
-- Declare your license in `tile.json` (SPDX identifier). Approved native-React-tile licenses: **MIT, Apache-2.0, BSD-3-Clause**. **No copyleft** — copyleft tiles would bundle into UFFDA's main app and infect its Apache 2.0 license; this is the same rule every modern OSS app applies.
+- Declare your license in `tile.json` (SPDX identifier). Approved native-React-tile licenses: **MIT, Apache-2.0, BSD-3-Clause**. **No copyleft** — copyleft tiles would bundle into UFFDA's main app and infect its Apache 2.0 license; this is the same rule every modern OSS app applies. **No NOASSERTION on native-React tiles either** — bundled-into-the-app means uncertain provenance is a real legal hazard, so the bar here is higher. Use the iframe lane if you have an uncertain-pedigree tile you still want to ship.
 - Use the `window.uffda` API for state. Don't reach into UFFDA's internal stores directly.
 - Default export, no required props, must be a pure functional component or use only React hooks.
 
@@ -69,7 +69,48 @@ For things hosted elsewhere — Observable notebooks, blog posts, third-party to
 ### Constraints
 
 - The destination URL needs to be stable and ad-free. We won't link to paywalled content unless there's a clear public-good case.
+- Declare a license for the linked content's reuse terms in `tile.json` — SPDX identifier or `NOASSERTION` if you don't know. Link tiles with NOASSERTION render with a "?" badge, same as iframe tiles. The license refers to the destination content, not the link tile itself.
 - Add a screenshot in the same folder if the link doesn't render well as a card preview — name it `preview.png`, max 800×600, under 200 KB.
+- **Not for promotional links.** Commercial / revenue-driving / self-promo destinations belong in Commons as a conversation thread, not on the Sandbox tile shelf. See "Tiles vs. Commons threads" below.
+
+---
+
+## Tiles vs. Commons threads — what goes where
+
+UFFDA's Sandbox is **curated**. Commons is **open conversation**. Both are part of UFFDA; they're different surfaces with different purposes. Some submissions fit one surface better than the other.
+
+### Submit as a tile here if it's:
+
+- **Open-licensed** (one of the approved SPDX identifiers per lane, or `NOASSERTION` with a `licenseNote` for iframe + link tiles)
+- **Built for UFFDA users** — a tool, a game, a layer, an explainer, an experiment
+- **A standalone artifact** someone can interact with
+- **On-mission** — open ag data, plain-English access, alliance ethos
+
+### Take it to Commons instead if it's:
+
+- **Commercial or revenue-driving** — your hosted service, your paid tool, your consultancy
+- **Promotional / ad-style** — "check out my company's product"
+- **A "thing I found"** share without the contributor having built it
+- **Closed-source** where the user can't see what they're using
+- **Conversational by nature** — "we should consider X" / "here's what I'm thinking about" / "anyone tried Y?"
+
+### The heuristic, plain
+
+Tiles are **things UFFDA users do**. Commons is **things UFFDA users talk about**. There's real overlap; this is judgment, not a strict rule.
+
+**When in doubt:** start in Commons. Lower friction, larger audience, conversation is the right primary mode for most things. If a thread shows actual use — multiple Pioneers want to use the thing, the maker is willing to license it on UFFDA-compatible terms — graduate it to a tile later.
+
+### When we decline a tile and route to Commons
+
+Maintainers will say so clearly and link the contributor to a pre-filled Commons composer:
+
+> *"This is a great Commons share rather than a Sandbox tile — promotional / commercial / closed-source content fits better as a conversation. [Post it as an Offering in Commons →](https://uffda.ag/commons/post?type=offering)"*
+
+No bad feelings; same project, different surface.
+
+### Edge cases will exist
+
+Open-licensed tool whose maker also charges for hosted support. A free product that links to a paid tier. A tutorial that's CC-BY-licensed but lives on someone's marketing-flavored blog. Maintainers make a judgment call, write one paragraph in the PR explaining the call, move on. The goal is freedom-to-share with the lightest workable curation — not perfect rule-coverage. Transparency and freedom-to-operate rank higher than buttoned-up rule structures.
 
 ---
 
@@ -112,7 +153,8 @@ Field notes:
 | `icon` | yes | One of `play` (games), `globe` (layers/maps), `doc` (explainers/articles), `build-it` (claim-this calls for contributors). Drives the tile's icon. |
 | `tags` | yes | Array, 1–6 strings, lowercase kebab-case. Used for filtering. |
 | `author` | yes | At minimum `name` and one of `github` / `site`. |
-| `license` | yes | SPDX identifier (e.g., `MIT`, `Apache-2.0`, `CC-BY-4.0`, `CC0-1.0`). |
+| `license` | yes | SPDX identifier (e.g., `MIT`, `Apache-2.0`, `CC-BY-4.0`, `CC0-1.0`), or `NOASSERTION` for uncertain-lineage tiles (iframe + link only — not native React). See the lane sections above. |
+| `licenseNote` | no | Free-text best-effort note about the license, max 280 chars. Encouraged when `license` is `NOASSERTION` so users see what you do remember. Renders next to the license badge in the wrapper. |
 | `featured` | no | Boolean, defaults `false`. Set by UFFDA maintainers, not contributors. |
 | `createdAt` | yes | ISO date `YYYY-MM-DD`. |
 | `entry` | required for iframe/react | File name relative to the tile folder. Defaults: `index.html` for iframe, `Tile.tsx` for react. |

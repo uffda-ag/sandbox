@@ -203,7 +203,7 @@
 
 ---
 
-Copyright 2026 Nick Reinke and UFFDA contributors.
+Copyright 2026 UFFDA contributors.
 
 UFFDA — Unified Farm & Field Data Alliance — is a community project to
 gather, surface, and explain open agricultural data. This repository
@@ -216,7 +216,9 @@ docs. Each tile in tiles/ declares its own license in its tile.json
 the repo wrapper. See CONTRIBUTING.md for the approved tile-license
 list and the contributor sign-off (DCO) process.
 
-When UFFDA forms a legal entity, copyright in contributions by Nick
-Reinke will be assigned to that entity by separate agreement; this
-license itself remains in force perpetually for any version released
-under it.
+If UFFDA forms a legal entity in the future, prior contributors may be
+invited (not required) to assign their rights to that entity. Apache 2.0
+itself remains in force perpetually for any version already released
+under it, regardless of subsequent entity formation. UFFDA is
+intentionally informal at this stage; the project belongs to the people
+who build it.

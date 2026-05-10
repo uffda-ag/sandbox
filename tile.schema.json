@@ -4,7 +4,19 @@
   "title": "UFFDA Sandbox Tile",
   "description": "Schema for every tile.json in the uffda-ag/sandbox repo. See CONTRIBUTING.md for field-level guidance.",
   "type": "object",
-  "required": ["name", "slug", "type", "status", "tagline", "description", "icon", "tags", "author", "license", "createdAt"],
+  "required": [
+    "name",
+    "slug",
+    "type",
+    "status",
+    "tagline",
+    "description",
+    "icon",
+    "tags",
+    "author",
+    "license",
+    "createdAt"
+  ],
   "additionalProperties": false,
   "properties": {
     "name": {
@@ -20,11 +32,19 @@
     },
     "type": {
       "type": "string",
-      "enum": ["iframe", "react", "link"]
+      "enum": [
+        "iframe",
+        "react",
+        "link"
+      ]
     },
     "status": {
       "type": "string",
-      "enum": ["coming-soon", "in-dev", "live"]
+      "enum": [
+        "coming-soon",
+        "in-dev",
+        "live"
+      ]
     },
     "tagline": {
       "type": "string",
@@ -38,7 +58,12 @@
     },
     "icon": {
       "type": "string",
-      "enum": ["play", "globe", "doc", "build-it"]
+      "enum": [
+        "play",
+        "globe",
+        "doc",
+        "build-it"
+      ]
     },
     "tags": {
       "type": "array",
@@ -53,21 +78,41 @@
     },
     "author": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "additionalProperties": false,
       "properties": {
-        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
-        "github": { "type": "string", "pattern": "^[A-Za-z0-9-]+$" },
-        "site": { "type": "string", "format": "uri" }
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "github": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9-]+$"
+        },
+        "site": {
+          "type": "string",
+          "format": "uri"
+        }
       },
       "anyOf": [
-        { "required": ["github"] },
-        { "required": ["site"] }
+        {
+          "required": [
+            "github"
+          ]
+        },
+        {
+          "required": [
+            "site"
+          ]
+        }
       ]
     },
     "license": {
       "type": "string",
-      "description": "SPDX license identifier. Common values: MIT, Apache-2.0, BSD-3-Clause, CC-BY-4.0, CC-BY-SA-4.0, CC0-1.0."
+      "description": "SPDX license identifier, OR the literal 'NOASSERTION' if license is uncertain (only allowed on iframe + link tiles, not native React). Common values: MIT, Apache-2.0, BSD-3-Clause, CC-BY-4.0, CC-BY-SA-4.0, CC0-1.0, NOASSERTION."
     },
     "featured": {
       "type": "boolean",
@@ -86,16 +131,71 @@
       "type": "string",
       "format": "uri",
       "description": "Required for link tiles. The destination URL."
+    },
+    "licenseNote": {
+      "type": "string",
+      "maxLength": 280,
+      "description": "Optional best-effort note about the license. Encouraged when license is NOASSERTION ('I think this was MIT but lost the original repo,' 'parts of this are from Stack Overflow snippets,' etc.). Renders alongside the license badge for transparency."
     }
   },
   "allOf": [
     {
-      "if": { "properties": { "type": { "const": "link" } } },
-      "then": { "required": ["url"] }
+      "if": {
+        "properties": {
+          "type": {
+            "const": "link"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "url"
+        ]
+      }
     },
     {
-      "if": { "properties": { "type": { "enum": ["iframe", "react"] } } },
-      "then": { "not": { "required": ["url"] } }
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "iframe",
+              "react"
+            ]
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": [
+            "url"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "react"
+          },
+          "license": {
+            "const": "NOASSERTION"
+          }
+        },
+        "required": [
+          "type",
+          "license"
+        ]
+      },
+      "then": {
+        "properties": {
+          "license": {
+            "not": {
+              "const": "NOASSERTION"
+            }
+          }
+        }
+      }
     }
   ]
 }

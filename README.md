@@ -47,14 +47,14 @@ UFFDA uses a tiered license posture that mirrors how we ask source providers to 
 
 | Lane | Allowed | Disallowed |
 | --- | --- | --- |
-| Iframe widget | MIT, Apache-2.0, BSD-3-Clause, CC-BY-4.0, CC-BY-SA-4.0, CC0-1.0 | GPL/AGPL (incompatible with iframe sandboxing assumptions) |
-| Native React widget | MIT, Apache-2.0, BSD-3-Clause | Anything copyleft — would bundle into UFFDA's main app and infect its Apache 2.0 |
-| Link card | Any license, since we're only linking to the destination |
+| Iframe widget | MIT, Apache-2.0, BSD-3-Clause, CC-BY-4.0, CC-BY-SA-4.0, CC0-1.0, **NOASSERTION** (uncertain-lineage, paired with `licenseNote`) | GPL/AGPL (incompatible with iframe sandboxing assumptions) |
+| Native React widget | MIT, Apache-2.0, BSD-3-Clause | Anything copyleft — would bundle into UFFDA's main app. Also no NOASSERTION — bundled-in code needs known provenance. |
+| Link card | Any SPDX license OR NOASSERTION (refers to the destination content). **Not for commercial / promotional destinations** — those route to Commons as a conversation thread. |
 
 Tiles whose declared license isn't on this list need a maintainer conversation before merging. Tiles whose declared license conflicts with UFFDA's open-data ethos won't be merged.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the contributor sign-off process (DCO), the full tile-license rationale, and the per-tile schema.
 
-**Copyright:** *Copyright 2026 Nick Reinke and UFFDA contributors.* UFFDA is currently a community project, not a legal entity; when a UFFDA entity is formed, copyrights in Nick Reinke's contributions will be assigned to that entity by separate agreement. Apache 2.0 itself remains in force perpetually for any version released under it.
+**Copyright:** *Copyright 2026 UFFDA contributors.* UFFDA is intentionally informal at this stage — a community project, not yet a legal entity, and not anchored on any single founder. The project belongs to the people who build it. If UFFDA forms a legal entity later, prior contributors may be invited (not required) to assign their rights to it; the license itself stays in force perpetually for any version released under it.
 
 — [@uffda-ag](https://github.com/uffda-ag)
