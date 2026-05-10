@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uffda.ag/sandbox/tile.schema.json",
+  "title": "UFFDA Sandbox Tile",
+  "description": "Schema for every tile.json in the uffda-ag/sandbox repo. See CONTRIBUTING.md for field-level guidance.",
+  "type": "object",
+  "required": ["name", "slug", "type", "status", "tagline", "description", "icon", "tags", "author", "license", "createdAt"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 64
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 2,
+      "maxLength": 48
+    },
+    "type": {
+      "type": "string",
+      "enum": ["iframe", "react", "link"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["coming-soon", "in-dev", "live"]
+    },
+    "tagline": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 600
+    },
+    "icon": {
+      "type": "string",
+      "enum": ["play", "globe", "doc", "build-it"]
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "maxLength": 24
+      },
+      "minItems": 1,
+      "maxItems": 6,
+      "uniqueItems": true
+    },
+    "author": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "github": { "type": "string", "pattern": "^[A-Za-z0-9-]+$" },
+        "site": { "type": "string", "format": "uri" }
+      },
+      "anyOf": [
+        { "required": ["github"] },
+        { "required": ["site"] }
+      ]
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX license identifier. Common values: MIT, Apache-2.0, BSD-3-Clause, CC-BY-4.0, CC-BY-SA-4.0, CC0-1.0."
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set by UFFDA maintainers, not contributors. Boosts the tile in the gallery's default sort."
+    },
+    "createdAt": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "entry": {
+      "type": "string",
+      "description": "Required for iframe (defaults to index.html) and react (defaults to Tile.tsx). Path relative to the tile folder."
+    },
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Required for link tiles. The destination URL."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "link" } } },
+      "then": { "required": ["url"] }
+    },
+    {
+      "if": { "properties": { "type": { "enum": ["iframe", "react"] } } },
+      "then": { "not": { "required": ["url"] } }
+    }
+  ]
+}
