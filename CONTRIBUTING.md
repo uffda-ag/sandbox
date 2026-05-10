@@ -23,7 +23,7 @@ For self-contained mini-apps: games, calculators, explorers. Your HTML, your CSS
 - Tile loads in an iframe with `sandbox="allow-scripts allow-popups"`. No top-level navigation, no localStorage / cookies. Use `postMessage` to talk to the parent.
 - Keep the folder under **2 MB**. Larger payloads need a discussion in advance.
 - No third-party trackers, analytics scripts, or ad tags. UFFDA is ad-free; tiles inherit that.
-- Declare your license in `tile.json`. We don't merge tiles without a declared license.
+- Declare your license in `tile.json` (SPDX identifier). Approved iframe licenses: **MIT, Apache-2.0, BSD-3-Clause, CC-BY-4.0, CC-BY-SA-4.0, CC0-1.0**. AGPL/GPL not accepted on iframe tiles — copyleft-on-distribution doesn't compose cleanly with how UFFDA loads tiles. Tiles without a declared license won't merge.
 
 ### Example: Guess the Crop
 
@@ -49,6 +49,7 @@ For tools that need direct access to UFFDA's state — a calculator that reads t
 
 - Higher trust bar than iframe — your code runs in the main app context. Reviewers will read the diff line-by-line.
 - No new runtime dependencies without discussion. The main app ships React 18 + Next.js 14 + MapLibre + Tailwind already.
+- Declare your license in `tile.json` (SPDX identifier). Approved native-React-tile licenses: **MIT, Apache-2.0, BSD-3-Clause**. **No copyleft** — copyleft tiles would bundle into UFFDA's main app and infect its Apache 2.0 license; this is the same rule every modern OSS app applies.
 - Use the `window.uffda` API for state. Don't reach into UFFDA's internal stores directly.
 - Default export, no required props, must be a pure functional component or use only React hooks.
 
@@ -178,8 +179,43 @@ If something needs work, we'll comment and you'll iterate. We try to merge or la
 
 ---
 
+## Contributor sign-off — Developer Certificate of Origin (DCO)
+
+UFFDA uses the **Developer Certificate of Origin** instead of a Contributor License Agreement. The DCO is the same standard used by Linux, Docker, Kubernetes, and GitLab — it's lightweight, doesn't require any forms or external accounts, and works for both individual and corporate contributors.
+
+What you're agreeing to (the [DCO 1.1 text](https://developercertificate.org/) in plain English):
+
+- The contribution is your own work, OR
+- The contribution is based on work covered by an open-source license you have the right to submit it under, OR
+- The contribution was provided to you by someone who certified the above, and you're forwarding it unchanged.
+- You understand the contribution is public, your sign-off is part of the public record, and the project may redistribute it under the project's license forever.
+
+**How to sign off:** add `-s` to your commit command. That's it.
+
+```bash
+git commit -s -m "Add iframe tile: my-cool-game"
+```
+
+Git will append a line to your commit message that reads:
+
+```
+Signed-off-by: Your Name <your-email@example.com>
+```
+
+That signature *is* the DCO certification — the same way it works for the Linux kernel. CI checks that every commit in a PR has it. If you forget, amend the commit (`git commit --amend -s`) or rebase the branch with `--signoff`.
+
+**Why DCO instead of a CLA?** UFFDA isn't a legal entity yet. A Contributor License Agreement requires an entity on the receiving end to hold the granted rights cleanly. DCO is a contributor-side certification that doesn't depend on the project's legal structure. When UFFDA forms an entity later, DCO commits stay valid; no re-signing needed.
+
+---
+
 ## Code of conduct
 
 Be kind. Be honest. Be useful. Disagreement is fine; bad faith isn't. We'll remove what doesn't fit. Report issues to hello@uffda.ag.
+
+---
+
+## License of this CONTRIBUTING file
+
+This file is part of the `uffda-ag/sandbox` repo, dual-licensed under **Apache 2.0** (as part of the source distribution) and **CC-BY 4.0** (for content reuse). See [LICENSE](./LICENSE) and [NOTICE](./NOTICE). UFFDA's full license posture is explained in plain English at [https://uffda.ag/license](https://uffda.ag/license) (live as of Sprint 16).
 
 — UFFDA core

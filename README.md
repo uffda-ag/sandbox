@@ -37,6 +37,24 @@ When a tile PR merges to `main` here, the next deploy of [uffda-ag/uffda](https:
 
 ## License
 
-This repo's wrapper code, schema, and docs are MIT-licensed. Each tile declares its own license in `tile.json` — wide latitude (MIT, CC-BY, CC0, Apache 2.0, public domain). Tiles whose declared license conflicts with UFFDA's public-data ethos won't be merged.
+UFFDA uses a tiered license posture that mirrors how we ask source providers to declare their terms — plain, visible, consistent.
+
+- **This repo's wrapper code, schemas, and dev tooling** are licensed under **Apache 2.0** (see [LICENSE](./LICENSE)).
+- **Documentation, microcopy, and curated content** in this repo (READMEs, CONTRIBUTING, schema descriptions) are dual-licensed under **Apache 2.0** (as part of the source distribution) and **CC-BY 4.0** (for content reuse).
+- **Each individual tile** under `tiles/` declares its own license in its `tile.json` (SPDX identifier). Tile licenses are independent of the repo wrapper.
+
+**Approved tile licenses** (declared in `tile.json` per tile):
+
+| Lane | Allowed | Disallowed |
+| --- | --- | --- |
+| Iframe widget | MIT, Apache-2.0, BSD-3-Clause, CC-BY-4.0, CC-BY-SA-4.0, CC0-1.0 | GPL/AGPL (incompatible with iframe sandboxing assumptions) |
+| Native React widget | MIT, Apache-2.0, BSD-3-Clause | Anything copyleft — would bundle into UFFDA's main app and infect its Apache 2.0 |
+| Link card | Any license, since we're only linking to the destination |
+
+Tiles whose declared license isn't on this list need a maintainer conversation before merging. Tiles whose declared license conflicts with UFFDA's open-data ethos won't be merged.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the contributor sign-off process (DCO), the full tile-license rationale, and the per-tile schema.
+
+**Copyright:** *Copyright 2026 Nick Reinke and UFFDA contributors.* UFFDA is currently a community project, not a legal entity; when a UFFDA entity is formed, copyrights in Nick Reinke's contributions will be assigned to that entity by separate agreement. Apache 2.0 itself remains in force perpetually for any version released under it.
 
 — [@uffda-ag](https://github.com/uffda-ag)
