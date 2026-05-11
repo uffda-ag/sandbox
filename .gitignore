@@ -23,3 +23,8 @@ dist/
 build/
 .next/
 out/
+
+# safety: never commit stray credential files
+*.git-credentials
+UsersNick.git-credentials
+
