@@ -1,0 +1,35 @@
+# ───────────────────────────────────────────────────────────────────────
+# dco.yml — Developer Certificate of Origin check on every pull request.
+#
+# Every commit on a PR must carry a `Signed-off-by: Name <email>` trailer
+# (the line `git commit -s` adds). Workflow fails if any commit in the
+# range is missing one. Public contributors and core authors run the same
+# check — same posture as Linux, Git, and most CNCF projects.
+#
+# Action: tim-actions/dco@v1.1.0 (latest stable release, pinned by tag).
+# ───────────────────────────────────────────────────────────────────────
+
+name: dco
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check:
+    name: signed-off-by check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch enough history to walk every commit in the PR range.
+          fetch-depth: 0
+
+      - name: DCO check
+        uses: tim-actions/dco@v1.1.0
