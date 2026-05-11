@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guess the Crop</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game">
+      <header class="hud">
+        <div class="hud-left">
+          <span class="hud-label">Round</span>
+          <span class="hud-value" id="round">1</span>
+          <span class="hud-sep">/</span>
+          <span class="hud-value" id="total">8</span>
+        </div>
+        <div class="hud-right">
+          <span class="hud-label">Score</span>
+          <span class="hud-value" id="score">0</span>
+        </div>
+      </header>
+
+      <section class="stage" id="stage">
+        <div class="chip-frame">
+          <img id="chip" class="chip" alt="Satellite-derived chip of an unknown field" />
+          <!--
+            Gate A acceptance: the placeholder caption must appear on EVERY
+            chip rendering, not just one. It's part of the DOM, not the
+            PNG, so it's true for every round.
+          -->
+          <p class="chip-caption" id="chip-caption">
+            Placeholder chip — real Sentinel-2 in Sprint 17
+          </p>
+        </div>
+
+        <div class="prompt">What crop is this?</div>
+
+        <div class="choices" id="choices">
+          <button type="button" class="choice" data-crop="corn">Corn</button>
+          <button type="button" class="choice" data-crop="soy">Soy</button>
+          <button type="button" class="choice" data-crop="wheat">Wheat</button>
+          <button type="button" class="choice" data-crop="sorghum">Sorghum</button>
+        </div>
+
+        <p class="verdict" id="verdict" aria-live="polite"></p>
+      </section>
+
+      <section class="endscreen" id="endscreen" hidden>
+        <h2>Game over.</h2>
+        <p>
+          You got <span id="final-score">0</span> out of
+          <span id="final-total">8</span>.
+        </p>
+        <p class="endscreen-note" id="endscreen-note"></p>
+        <button type="button" class="play-again" id="play-again">
+          Play again
+        </button>
+      </section>
+
+      <footer class="meta">
+        <span>USDA CDL ground truth · MIT · uffda.ag</span>
+      </footer>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "Guess the Crop",
+  "slug": "guess-the-crop",
+  "type": "iframe",
+  "status": "live",
+  "tagline": "Can you tell corn from soy from a satellite chip?",
+  "description": "30-second game. We show you a satellite-derived image chip of a field. You guess the crop. Built on USDA CDL ground truth — 8 pre-staged chips covering corn, soy, wheat, and sorghum. Score tally; play again. Chips in this build are placeholders; real Sentinel-2 RGB lands in Sprint 17.",
+  "icon": "play",
+  "tags": ["game", "cdl", "sentinel-2", "crop-id"],
+  "author": {
+    "name": "UFFDA core",
+    "site": "https://uffda.ag"
+  },
+  "license": "MIT",
+  "featured": true,
+  "createdAt": "2026-05-11",
+  "entry": "index.html"
+}
