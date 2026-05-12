@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Guess the Crop — Rotation Guesser</title>
+    <title>Guess the Crop — Real Sentinel-2 Imagery</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -22,34 +22,33 @@
         </div>
       </header>
 
+      <div class="year-row">
+        <label class="year-label" for="year-filter">Year filter</label>
+        <select class="year-select" id="year-filter" aria-label="Filter chips by year">
+          <option value="all">All years</option>
+          <option value="2020">2020</option>
+          <option value="2021">2021</option>
+          <option value="2022">2022</option>
+          <option value="2023">2023</option>
+          <option value="2024">2024</option>
+        </select>
+      </div>
+
       <section class="stage" id="stage">
-        <div class="board-frame">
-          <svg
-            id="board"
-            class="board"
-            viewBox="0 0 480 360"
-            role="img"
-            aria-label="Field cluster with target field outlined in rust and neighbor fields painted with three years of CDL rotation ribbons"
-          ></svg>
-          <p class="board-caption" id="board-caption">
-            The rust-outlined field is the target. Each polygon shows the last three years of CDL crops as horizontal ribbons (Y-3 on top, Y-1 on the bottom). Guess what the target's <strong>2024</strong> crop was.
-          </p>
-        </div>
+        <figure class="chip-frame">
+          <img
+            class="chip"
+            id="chip"
+            alt="Sentinel-2 RGB chip of a CONUS field, ~600m square, peak growing season"
+            width="256"
+            height="256"
+          />
+          <figcaption class="chip-meta" id="chip-meta" aria-live="polite"></figcaption>
+        </figure>
 
-        <div class="legend" id="legend" aria-label="CDL crop legend"></div>
+        <p class="prompt">What's growing in this field?</p>
 
-        <div class="prompt">What did the target field plant this year?</div>
-
-        <div class="choices" id="choices">
-          <button type="button" class="choice" data-crop="corn">Corn</button>
-          <button type="button" class="choice" data-crop="soy">Soy</button>
-          <button type="button" class="choice" data-crop="wheat">Winter wheat</button>
-          <button type="button" class="choice" data-crop="canola">Canola</button>
-          <button type="button" class="choice" data-crop="rice">Rice</button>
-          <button type="button" class="choice" data-crop="alfalfa">Alfalfa</button>
-          <button type="button" class="choice" data-crop="fallow">Fallow</button>
-          <button type="button" class="choice" data-crop="pasture">Pasture</button>
-        </div>
+        <div class="choices" id="choices"></div>
 
         <p class="verdict" id="verdict" aria-live="polite"></p>
       </section>
@@ -57,17 +56,22 @@
       <section class="endscreen" id="endscreen" hidden>
         <h2>Round closed.</h2>
         <p>
-          You read <span id="final-score">0</span> of
-          <span id="final-total">8</span> rotations.
+          You called <span id="final-score">0</span> of
+          <span id="final-total">8</span> chips correctly.
         </p>
-        <p class="endscreen-note" id="endscreen-note"></p>
+        <p class="endscreen-note">
+          Even with real Sentinel-2 imagery this is hard — that's why
+          satellite ag-analytics is non-trivial. Crops at peak growth
+          can look alike from 10m up; the rotation pattern, the calendar,
+          and the region all matter.
+        </p>
         <button type="button" class="play-again" id="play-again">
           Play again
         </button>
       </section>
 
       <footer class="meta">
-        <span>Spatial-temporal reasoning · USDA CDL inspired · MIT · uffda.ag</span>
+        <span>Real Sentinel-2 RGB · CDL ground truth · 2020–2024 · uffda.ag</span>
       </footer>
     </main>
 

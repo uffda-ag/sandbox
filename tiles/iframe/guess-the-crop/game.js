@@ -1,464 +1,203 @@
 /*
- * Guess the Crop v2 - Rotation Guesser.
+ * Guess the Crop v3 — Real Sentinel-2 Imagery, CDL Ground Truth.
  *
- * Show a target field plus 6-8 neighbor fields, each painted with three
- * years of prior CDL rotation as horizontal ribbons inside the polygon.
- * Player predicts the target's current-year crop. The educational lift
- * is that satellite ag-data isn't just spotting corn from the air - it's
- * the temporal rotation pattern that matters, and neighbor context gives
- * you priors.
+ * Show a real Sentinel-2 RGB chip (256×256, ~600m square, peak growing
+ * season) of a CONUS field, plus a metadata strip (state/county/year),
+ * and ask the player to pick the dominant crop from a 4-option button
+ * group. Eight rounds per game, score tally, replay button.
  *
- * Self-contained: SVG-only rendering (no embedded MapLibre, no chart
- * library). All cluster data inlined below so the iframe runtime doesn't
- * need fetch() permissions (fetch from a sandboxed null-origin iframe is
- * CORS-blocked anyway). chips.json stays on disk for human reference;
- * the runtime reads from CLUSTERS in this file. If you add a cluster,
- * update both.
+ * Year filter (All / 2020 / 2021 / 2022 / 2023 / 2024) restricts the
+ * pool the game shuffles from.
  *
- * postMessage handshake: posts uffda:ready on init per the canonical
- * v1 protocol; logs inbound uffda:state for visibility; acks teardown.
+ * No fetch() — the manifest below is inlined as a JS const. This is
+ * intentional: the iframe runs from sandbox.uffda.ag in a sandboxed
+ * (null-origin) iframe, where fetch('chips.json') fails due to the
+ * null origin. Sprint 16 retro caught this; v3 stays inlined.
+ *
+ * Chip metadata: id, state, county, year, trueCrop (from CDL dominance
+ * stats), options (3 plausible distractors), sentinelDate, cloudCover.
+ * Chip image is loaded as chips/<id>.png (a sibling path, which IS
+ * permitted from the iframe — only fetch() of JSON is null-origin
+ * blocked; <img> src loads aren't).
  */
 
-const TOTAL_ROUNDS = 8;
-const SVG_W = 480;
-const SVG_H = 360;
-
-const CROP_COLORS = {
-  corn:    "#dac51e",
-  soy:     "#26a644",
-  wheat:   "#c2a04a",
-  canola:  "#e6c200",
-  rice:    "#79bcd8",
-  alfalfa: "#7aae60",
-  fallow:  "#a08866",
-  pasture: "#9eb088",
-};
-
-const CROP_LABELS = {
-  corn:    "Corn",
-  soy:     "Soy",
-  wheat:   "Winter wheat",
-  canola:  "Canola",
-  rice:    "Rice",
-  alfalfa: "Alfalfa",
-  fallow:  "Fallow",
-  pasture: "Pasture",
-};
-
-// Inlined cluster manifest. Polygons are arrays of [x,y] in normalized
-// 0..1 viewport space; history is [Y-3, Y-2, Y-1]; truth is the target
-// field's Y crop (the answer). chips.json on disk mirrors this for
-// reference - update both if you add a cluster.
-const CLUSTERS = [
-  {
-    id: "iowa-cs-1",
-    region: "Iowa (Story County area)",
-    year: 2024,
-    target: { polygon: [[0.40,0.40],[0.60,0.40],[0.60,0.60],[0.40,0.60]], history: ["soy","corn","soy"], truth: "corn" },
-    neighbors: [
-      { polygon: [[0.18,0.18],[0.38,0.18],[0.38,0.38],[0.18,0.38]], history: ["corn","soy","corn"] },
-      { polygon: [[0.40,0.18],[0.60,0.18],[0.60,0.38],[0.40,0.38]], history: ["soy","corn","soy"] },
-      { polygon: [[0.62,0.18],[0.82,0.18],[0.82,0.38],[0.62,0.38]], history: ["corn","soy","corn"] },
-      { polygon: [[0.18,0.40],[0.38,0.40],[0.38,0.60],[0.18,0.60]], history: ["corn","soy","corn"] },
-      { polygon: [[0.62,0.40],[0.82,0.40],[0.82,0.60],[0.62,0.60]], history: ["corn","soy","corn"] },
-      { polygon: [[0.18,0.62],[0.38,0.62],[0.38,0.82],[0.18,0.82]], history: ["soy","corn","soy"] },
-      { polygon: [[0.40,0.62],[0.60,0.62],[0.60,0.82],[0.40,0.82]], history: ["corn","soy","corn"] },
-      { polygon: [[0.62,0.62],[0.82,0.62],[0.82,0.82],[0.62,0.82]], history: ["soy","corn","soy"] },
-    ],
-  },
-  {
-    id: "iowa-cs-2",
-    region: "Northwest Iowa (corn-on-corn pocket)",
-    year: 2024,
-    target: { polygon: [[0.38,0.42],[0.62,0.42],[0.62,0.62],[0.38,0.62]], history: ["corn","corn","corn"], truth: "corn" },
-    neighbors: [
-      { polygon: [[0.16,0.20],[0.36,0.20],[0.36,0.40],[0.16,0.40]], history: ["corn","corn","soy"] },
-      { polygon: [[0.38,0.20],[0.62,0.20],[0.62,0.40],[0.38,0.40]], history: ["corn","corn","corn"] },
-      { polygon: [[0.64,0.20],[0.84,0.20],[0.84,0.40],[0.64,0.40]], history: ["soy","corn","corn"] },
-      { polygon: [[0.16,0.42],[0.36,0.42],[0.36,0.62],[0.16,0.62]], history: ["corn","corn","corn"] },
-      { polygon: [[0.64,0.42],[0.84,0.42],[0.84,0.62],[0.64,0.62]], history: ["corn","corn","soy"] },
-      { polygon: [[0.16,0.64],[0.36,0.64],[0.36,0.84],[0.16,0.84]], history: ["corn","corn","corn"] },
-      { polygon: [[0.38,0.64],[0.62,0.64],[0.62,0.84],[0.38,0.84]], history: ["corn","soy","corn"] },
-    ],
-  },
-  {
-    id: "kansas-wheat-fallow",
-    region: "Western Kansas (winter-wheat / fallow)",
-    year: 2024,
-    target: { polygon: [[0.38,0.40],[0.62,0.40],[0.62,0.60],[0.38,0.60]], history: ["wheat","fallow","wheat"], truth: "fallow" },
-    neighbors: [
-      { polygon: [[0.14,0.18],[0.36,0.18],[0.36,0.38],[0.14,0.38]], history: ["fallow","wheat","fallow"] },
-      { polygon: [[0.38,0.18],[0.62,0.18],[0.62,0.38],[0.38,0.38]], history: ["wheat","fallow","wheat"] },
-      { polygon: [[0.64,0.18],[0.86,0.18],[0.86,0.38],[0.64,0.38]], history: ["fallow","wheat","fallow"] },
-      { polygon: [[0.14,0.40],[0.36,0.40],[0.36,0.60],[0.14,0.60]], history: ["fallow","wheat","fallow"] },
-      { polygon: [[0.64,0.40],[0.86,0.40],[0.86,0.60],[0.64,0.60]], history: ["fallow","wheat","fallow"] },
-      { polygon: [[0.14,0.62],[0.36,0.62],[0.36,0.82],[0.14,0.82]], history: ["wheat","fallow","wheat"] },
-      { polygon: [[0.38,0.62],[0.62,0.62],[0.62,0.82],[0.38,0.82]], history: ["fallow","wheat","fallow"] },
-    ],
-  },
-  {
-    id: "delta-rice-soy",
-    region: "Mississippi Delta (rice / soy)",
-    year: 2024,
-    target: { polygon: [[0.40,0.42],[0.62,0.42],[0.62,0.62],[0.40,0.62]], history: ["rice","soy","rice"], truth: "soy" },
-    neighbors: [
-      { polygon: [[0.18,0.20],[0.38,0.20],[0.38,0.40],[0.18,0.40]], history: ["soy","rice","soy"] },
-      { polygon: [[0.40,0.20],[0.62,0.20],[0.62,0.40],[0.40,0.40]], history: ["rice","soy","rice"] },
-      { polygon: [[0.64,0.20],[0.84,0.20],[0.84,0.40],[0.64,0.40]], history: ["soy","rice","soy"] },
-      { polygon: [[0.18,0.42],[0.38,0.42],[0.38,0.62],[0.18,0.62]], history: ["rice","soy","rice"] },
-      { polygon: [[0.64,0.42],[0.84,0.42],[0.84,0.62],[0.64,0.62]], history: ["soy","rice","soy"] },
-      { polygon: [[0.18,0.64],[0.38,0.64],[0.38,0.84],[0.18,0.84]], history: ["rice","soy","rice"] },
-      { polygon: [[0.40,0.64],[0.62,0.64],[0.62,0.84],[0.40,0.84]], history: ["soy","rice","soy"] },
-      { polygon: [[0.64,0.64],[0.84,0.64],[0.84,0.84],[0.64,0.84]], history: ["rice","soy","rice"] },
-    ],
-  },
-  {
-    id: "north-dakota-rotation",
-    region: "North Dakota (wheat / canola / soy)",
-    year: 2024,
-    target: { polygon: [[0.38,0.40],[0.62,0.40],[0.62,0.60],[0.38,0.60]], history: ["wheat","canola","soy"], truth: "wheat" },
-    neighbors: [
-      { polygon: [[0.16,0.18],[0.36,0.18],[0.36,0.38],[0.16,0.38]], history: ["soy","wheat","canola"] },
-      { polygon: [[0.38,0.18],[0.62,0.18],[0.62,0.38],[0.38,0.38]], history: ["canola","soy","wheat"] },
-      { polygon: [[0.64,0.18],[0.86,0.18],[0.86,0.38],[0.64,0.38]], history: ["wheat","canola","soy"] },
-      { polygon: [[0.16,0.40],[0.36,0.40],[0.36,0.60],[0.16,0.60]], history: ["soy","wheat","canola"] },
-      { polygon: [[0.64,0.40],[0.86,0.40],[0.86,0.60],[0.64,0.60]], history: ["canola","soy","wheat"] },
-      { polygon: [[0.16,0.62],[0.36,0.62],[0.36,0.82],[0.16,0.82]], history: ["wheat","canola","soy"] },
-      { polygon: [[0.38,0.62],[0.62,0.62],[0.62,0.82],[0.38,0.82]], history: ["soy","wheat","canola"] },
-    ],
-  },
-  {
-    id: "central-illinois-cs",
-    region: "Central Illinois (corn-soy)",
-    year: 2024,
-    target: { polygon: [[0.40,0.40],[0.60,0.40],[0.60,0.60],[0.40,0.60]], history: ["corn","soy","corn"], truth: "soy" },
-    neighbors: [
-      { polygon: [[0.18,0.18],[0.38,0.18],[0.38,0.38],[0.18,0.38]], history: ["soy","corn","soy"] },
-      { polygon: [[0.40,0.18],[0.60,0.18],[0.60,0.38],[0.40,0.38]], history: ["corn","soy","corn"] },
-      { polygon: [[0.62,0.18],[0.82,0.18],[0.82,0.38],[0.62,0.38]], history: ["soy","corn","soy"] },
-      { polygon: [[0.18,0.40],[0.38,0.40],[0.38,0.60],[0.18,0.60]], history: ["soy","corn","soy"] },
-      { polygon: [[0.62,0.40],[0.82,0.40],[0.82,0.60],[0.62,0.60]], history: ["soy","corn","soy"] },
-      { polygon: [[0.18,0.62],[0.38,0.62],[0.38,0.82],[0.18,0.82]], history: ["corn","soy","corn"] },
-      { polygon: [[0.40,0.62],[0.60,0.62],[0.60,0.82],[0.40,0.82]], history: ["soy","corn","soy"] },
-      { polygon: [[0.62,0.62],[0.82,0.62],[0.82,0.82],[0.62,0.82]], history: ["corn","soy","corn"] },
-    ],
-  },
-  {
-    id: "pasture-anchor",
-    region: "Eastern Kansas (corn-soy bounded by pasture)",
-    year: 2024,
-    target: { polygon: [[0.40,0.42],[0.62,0.42],[0.62,0.62],[0.40,0.62]], history: ["soy","corn","soy"], truth: "corn" },
-    neighbors: [
-      { polygon: [[0.18,0.20],[0.38,0.20],[0.38,0.40],[0.18,0.40]], history: ["pasture","pasture","pasture"] },
-      { polygon: [[0.40,0.20],[0.62,0.20],[0.62,0.40],[0.40,0.40]], history: ["corn","soy","corn"] },
-      { polygon: [[0.64,0.20],[0.84,0.20],[0.84,0.40],[0.64,0.40]], history: ["soy","corn","soy"] },
-      { polygon: [[0.18,0.42],[0.38,0.42],[0.38,0.62],[0.18,0.62]], history: ["pasture","pasture","pasture"] },
-      { polygon: [[0.64,0.42],[0.84,0.42],[0.84,0.62],[0.64,0.62]], history: ["corn","soy","corn"] },
-      { polygon: [[0.18,0.64],[0.38,0.64],[0.38,0.84],[0.18,0.84]], history: ["pasture","pasture","pasture"] },
-      { polygon: [[0.40,0.64],[0.62,0.64],[0.62,0.84],[0.40,0.84]], history: ["corn","soy","corn"] },
-    ],
-  },
-  {
-    id: "alfalfa-anchor",
-    region: "Central Wisconsin (corn-alfalfa)",
-    year: 2024,
-    target: { polygon: [[0.38,0.40],[0.62,0.40],[0.62,0.60],[0.38,0.60]], history: ["alfalfa","alfalfa","corn"], truth: "alfalfa" },
-    neighbors: [
-      { polygon: [[0.16,0.18],[0.36,0.18],[0.36,0.38],[0.16,0.38]], history: ["corn","alfalfa","alfalfa"] },
-      { polygon: [[0.38,0.18],[0.62,0.18],[0.62,0.38],[0.38,0.38]], history: ["alfalfa","alfalfa","corn"] },
-      { polygon: [[0.64,0.18],[0.86,0.18],[0.86,0.38],[0.64,0.38]], history: ["alfalfa","corn","alfalfa"] },
-      { polygon: [[0.16,0.40],[0.36,0.40],[0.36,0.60],[0.16,0.60]], history: ["corn","alfalfa","alfalfa"] },
-      { polygon: [[0.64,0.40],[0.86,0.40],[0.86,0.60],[0.64,0.60]], history: ["alfalfa","alfalfa","corn"] },
-      { polygon: [[0.16,0.62],[0.36,0.62],[0.36,0.82],[0.16,0.82]], history: ["alfalfa","corn","alfalfa"] },
-      { polygon: [[0.38,0.62],[0.62,0.62],[0.62,0.82],[0.38,0.82]], history: ["corn","alfalfa","alfalfa"] },
-    ],
-  },
+// ── Inlined chip manifest (33 chips, CONUS-wide, 2020-2024) ─────────
+const CHIPS = [
+  { id: "ia-story-2023-corn",       state: "IA", county: "Story",       year: 2023, trueCrop: "corn",         options: ["soybean", "alfalfa", "oats"],         sentinelDate: "2023-08-22", cloudCover: 0.1 },
+  { id: "il-mclean-2022-soy",       state: "IL", county: "McLean",      year: 2022, trueCrop: "soybean",      options: ["corn", "winter wheat", "alfalfa"],    sentinelDate: "2022-07-19", cloudCover: 3.6 },
+  { id: "in-tippecanoe-2023-corn",  state: "IN", county: "Tippecanoe",  year: 2023, trueCrop: "corn",         options: ["soybean", "winter wheat", "alfalfa"], sentinelDate: "2023-07-11", cloudCover: 0.0 },
+  { id: "ne-hamilton-2023-corn",    state: "NE", county: "Hamilton",    year: 2023, trueCrop: "corn",         options: ["soybean", "sorghum", "winter wheat"], sentinelDate: "2023-08-15", cloudCover: 0.5 },
+  { id: "mn-renville-2022-soy",     state: "MN", county: "Renville",    year: 2022, trueCrop: "soybean",      options: ["corn", "sugarbeets", "spring wheat"], sentinelDate: "2022-08-30", cloudCover: 0.0 },
+  { id: "ia-grundy-2021-corn",      state: "IA", county: "Grundy",      year: 2021, trueCrop: "corn",         options: ["soybean", "alfalfa", "oats"],         sentinelDate: "2021-08-14", cloudCover: 0.3 },
+  { id: "il-champaign-2024-soy",    state: "IL", county: "Champaign",   year: 2024, trueCrop: "soybean",      options: ["corn", "winter wheat", "alfalfa"],    sentinelDate: "2024-08-27", cloudCover: 0.0 },
+  { id: "ne-york-2020-corn",        state: "NE", county: "York",        year: 2020, trueCrop: "corn",         options: ["soybean", "winter wheat", "sorghum"], sentinelDate: "2020-08-10", cloudCover: 0.1 },
+  { id: "nd-cass-2023-spring-wt",   state: "ND", county: "Cass",        year: 2023, trueCrop: "spring wheat", options: ["soybean", "corn", "sunflower"],       sentinelDate: "2023-08-28", cloudCover: 0.0 },
+  { id: "nd-stutsman-2022-canola",  state: "ND", county: "Stutsman",    year: 2022, trueCrop: "canola",       options: ["spring wheat", "soybean", "sunflower"], sentinelDate: "2022-08-23", cloudCover: 0.0 },
+  { id: "sd-brown-2024-sunflower",  state: "SD", county: "Brown",       year: 2024, trueCrop: "sunflower",    options: ["spring wheat", "soybean", "corn"],    sentinelDate: "2024-08-02", cloudCover: 0.0 },
+  { id: "mt-chouteau-2021-wt",      state: "MT", county: "Chouteau",    year: 2021, trueCrop: "winter wheat", options: ["fallow", "spring wheat", "barley"],   sentinelDate: "2021-08-13", cloudCover: 0.0 },
+  { id: "nd-ransom-2024-soy",       state: "ND", county: "Ransom",      year: 2024, trueCrop: "soybean",      options: ["spring wheat", "corn", "sunflower"],  sentinelDate: "2024-08-02", cloudCover: 0.0 },
+  { id: "ks-thomas-2023-winter-wt", state: "KS", county: "Thomas",      year: 2023, trueCrop: "winter wheat", options: ["sorghum", "corn", "fallow"],          sentinelDate: "2023-07-24", cloudCover: 0.0 },
+  { id: "ks-haskell-2022-sorghum",  state: "KS", county: "Haskell",     year: 2022, trueCrop: "sorghum",      options: ["winter wheat", "corn", "cotton"],     sentinelDate: "2022-08-23", cloudCover: 1.0 },
+  { id: "ok-texas-2024-wt",         state: "OK", county: "Texas",       year: 2024, trueCrop: "winter wheat", options: ["sorghum", "corn", "fallow"],          sentinelDate: "2024-08-22", cloudCover: 0.3 },
+  { id: "tx-deaf-smith-2021-cotton",state: "TX", county: "Deaf Smith",  year: 2021, trueCrop: "cotton",       options: ["corn", "sorghum", "winter wheat"],    sentinelDate: "2021-09-07", cloudCover: 0.0 },
+  { id: "tx-lubbock-2023-cotton",   state: "TX", county: "Lubbock",     year: 2023, trueCrop: "cotton",       options: ["sorghum", "corn", "peanuts"],         sentinelDate: "2023-08-25", cloudCover: 0.0 },
+  { id: "ms-bolivar-2022-cotton",   state: "MS", county: "Bolivar",     year: 2022, trueCrop: "cotton",       options: ["soybean", "corn", "rice"],            sentinelDate: "2022-09-12", cloudCover: 0.0 },
+  { id: "ga-mitchell-2023-peanuts", state: "GA", county: "Mitchell",    year: 2023, trueCrop: "peanuts",      options: ["cotton", "corn", "soybean"],          sentinelDate: "2023-09-08", cloudCover: 2.3 },
+  { id: "al-limestone-2024-cotton", state: "AL", county: "Limestone",   year: 2024, trueCrop: "cotton",       options: ["corn", "soybean", "winter wheat"],    sentinelDate: "2024-08-24", cloudCover: 0.1 },
+  { id: "ar-arkansas-2023-rice",    state: "AR", county: "Arkansas",    year: 2023, trueCrop: "rice",         options: ["soybean", "cotton", "corn"],          sentinelDate: "2023-07-27", cloudCover: 0.4 },
+  { id: "ar-poinsett-2022-soy",     state: "AR", county: "Poinsett",    year: 2022, trueCrop: "soybean",      options: ["rice", "cotton", "corn"],             sentinelDate: "2022-08-31", cloudCover: 0.0 },
+  { id: "la-acadia-2024-rice",      state: "LA", county: "Acadia",      year: 2024, trueCrop: "rice",         options: ["soybean", "sugarcane", "corn"],       sentinelDate: "2024-07-31", cloudCover: 3.5 },
+  { id: "ca-fresno-2023-almonds",   state: "CA", county: "Fresno",      year: 2023, trueCrop: "almonds",      options: ["grapes", "pistachios", "tomatoes"],   sentinelDate: "2023-05-31", cloudCover: 0.2 },
+  { id: "ca-kern-2022-pistachios",  state: "CA", county: "Kern",        year: 2022, trueCrop: "pistachios",   options: ["almonds", "grapes", "cotton"],        sentinelDate: "2022-05-26", cloudCover: 0.0 },
+  { id: "id-bingham-2024-potatoes", state: "ID", county: "Bingham",     year: 2024, trueCrop: "potatoes",     options: ["winter wheat", "alfalfa", "barley"],  sentinelDate: "2024-08-27", cloudCover: 0.0 },
+  { id: "wa-whitman-2021-spring-wt",state: "WA", county: "Whitman",     year: 2021, trueCrop: "spring wheat", options: ["winter wheat", "barley", "lentils"],  sentinelDate: "2021-08-29", cloudCover: 0.0 },
+  { id: "ca-merced-2023-alfalfa",   state: "CA", county: "Merced",      year: 2023, trueCrop: "alfalfa",      options: ["almonds", "corn silage", "tomatoes"], sentinelDate: "2023-06-03", cloudCover: 0.1 },
+  { id: "wi-grant-2023-corn",       state: "WI", county: "Grant",       year: 2023, trueCrop: "corn",         options: ["soybean", "alfalfa", "winter wheat"], sentinelDate: "2023-07-25", cloudCover: 0.7 },
+  { id: "mi-huron-2022-soy",        state: "MI", county: "Huron",       year: 2022, trueCrop: "soybean",      options: ["corn", "sugarbeets", "winter wheat"], sentinelDate: "2022-08-27", cloudCover: 0.0 },
+  { id: "pa-lancaster-2023-corn",   state: "PA", county: "Lancaster",   year: 2023, trueCrop: "corn",         options: ["soybean", "alfalfa", "winter wheat"], sentinelDate: "2023-08-13", cloudCover: 30.4 },
+  { id: "va-rockingham-2024-corn",  state: "VA", county: "Rockingham",  year: 2024, trueCrop: "corn",         options: ["soybean", "alfalfa", "winter wheat"], sentinelDate: "2024-08-25", cloudCover: 0.8 },
 ];
 
-const els = {
-  round:         document.getElementById("round"),
-  total:         document.getElementById("total"),
-  score:         document.getElementById("score"),
-  region:        document.getElementById("region"),
-  stage:         document.getElementById("stage"),
-  board:         document.getElementById("board"),
-  legend:        document.getElementById("legend"),
-  choices:       document.getElementById("choices"),
-  verdict:       document.getElementById("verdict"),
-  endscreen:     document.getElementById("endscreen"),
-  endscreenNote: document.getElementById("endscreen-note"),
-  finalScore:    document.getElementById("final-score"),
-  finalTotal:    document.getElementById("final-total"),
-  playAgain:     document.getElementById("play-again"),
-};
+const ROUNDS_PER_GAME = 8;
 
-const state = {
-  deck: [],
-  index: 0,
-  score: 0,
-  locked: false,
-};
+// ── DOM refs ─────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const roundEl = $("round");
+const totalEl = $("total");
+const scoreEl = $("score");
+const regionEl = $("region");
+const chipImg = $("chip");
+const chipMetaEl = $("chip-meta");
+const choicesEl = $("choices");
+const verdictEl = $("verdict");
+const stageEl = $("stage");
+const endscreenEl = $("endscreen");
+const finalScoreEl = $("final-score");
+const finalTotalEl = $("final-total");
+const playAgainBtn = $("play-again");
+const yearSelect = $("year-filter");
 
-// postMessage handshake (v1 canonical contract)
-function postReady() {
-  window.parent.postMessage({ type: "uffda:ready", version: 1 }, "*");
-}
-function onHostMessage(event) {
-  const data = event && event.data;
-  if (!data || typeof data !== "object" || data.version !== 1) return;
-  if (data.type === "uffda:state") {
-    // eslint-disable-next-line no-console
-    console.debug("[guess-the-crop] received uffda:state", data.payload);
-  } else if (data.type === "uffda:teardown") {
-    // eslint-disable-next-line no-console
-    console.debug("[guess-the-crop] host teardown received");
-  }
+// ── Crop label formatter ─────────────────────────────────────────────
+function fmtCrop(c) {
+  // Title-case the label. "winter wheat" → "Winter wheat".
+  return c.charAt(0).toUpperCase() + c.slice(1);
 }
 
-// Deck management
-function buildDeck() {
-  const deck = CLUSTERS.slice();
-  for (let i = deck.length - 1; i > 0; i--) {
+// ── Shuffle (in-place Fisher-Yates) ──────────────────────────────────
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return deck;
+  return arr;
 }
 
-// SVG helpers — string builders. Renders cluster polygons + per-field
-// ribbon stripes (Y-3 top, Y-1 bottom). Target gets the rust outline +
-// no ribbons inside (player guesses Y).
-function renderCluster(cluster) {
-  const svgNS = "http://www.w3.org/2000/svg";
-  const root = els.board;
-  while (root.firstChild) root.removeChild(root.firstChild);
+// ── State ────────────────────────────────────────────────────────────
+let deck = [];
+let roundIdx = 0;
+let score = 0;
+let awaitingNext = false;
+let advanceTimer = null;
 
-  // Group background grid hint (a faint dotted boundary so isolated fields
-  // don't read as floating).
-  const bg = document.createElementNS(svgNS, "rect");
-  bg.setAttribute("x", "0");
-  bg.setAttribute("y", "0");
-  bg.setAttribute("width", String(SVG_W));
-  bg.setAttribute("height", String(SVG_H));
-  bg.setAttribute("fill", "#0e1709");
-  root.appendChild(bg);
-
-  // Neighbor fields - render with ribbon stripes
-  for (const f of cluster.neighbors) {
-    renderField(root, svgNS, f.polygon, f.history, /*target=*/ false);
-  }
-
-  // Target field - rust outline, no ribbons, "?" overlay
-  renderField(root, svgNS, cluster.target.polygon, /*history=*/ null, /*target=*/ true);
+// ── Year filter ──────────────────────────────────────────────────────
+function chipsForYearFilter() {
+  const y = yearSelect.value;
+  if (y === "all") return CHIPS.slice();
+  const n = Number(y);
+  return CHIPS.filter((c) => c.year === n);
 }
 
-function renderField(root, svgNS, normPoly, history, isTarget) {
-  // Convert normalized [0..1, 0..1] coords to SVG viewport coords.
-  const pts = normPoly.map(([x, y]) => [x * SVG_W, y * SVG_H]);
-  const xs = pts.map((p) => p[0]);
-  const ys = pts.map((p) => p[1]);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-  const w = maxX - minX;
-  const h = maxY - minY;
+// ── New game ────────────────────────────────────────────────────────
+function newGame() {
+  if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+  const pool = chipsForYearFilter();
+  // Build deck of ROUNDS_PER_GAME chips, randomized. If filtered pool
+  // < ROUNDS_PER_GAME, ride the full pool (shorter game gracefully).
+  const want = Math.min(ROUNDS_PER_GAME, pool.length);
+  deck = shuffle(pool.slice()).slice(0, want);
+  roundIdx = 0;
+  score = 0;
+  awaitingNext = false;
+  totalEl.textContent = String(deck.length);
+  scoreEl.textContent = "0";
+  endscreenEl.hidden = true;
+  stageEl.hidden = false;
+  renderRound();
+}
 
-  // Polygon outline (used as clip for ribbons + as the visible stroke)
-  const polyId = `poly-${Math.random().toString(36).slice(2, 8)}`;
-  const defs = document.createElementNS(svgNS, "defs");
-  const clip = document.createElementNS(svgNS, "clipPath");
-  clip.setAttribute("id", polyId);
-  const clipPoly = document.createElementNS(svgNS, "polygon");
-  clipPoly.setAttribute("points", pts.map((p) => `${p[0]},${p[1]}`).join(" "));
-  clip.appendChild(clipPoly);
-  defs.appendChild(clip);
-  root.appendChild(defs);
+// ── Render a round ───────────────────────────────────────────────────
+function renderRound() {
+  const chip = deck[roundIdx];
+  roundEl.textContent = String(roundIdx + 1);
+  regionEl.textContent = `${chip.state} · ${chip.county} County · ${chip.year}`;
+  chipImg.src = `chips/${chip.id}.png`;
+  chipImg.alt = `Sentinel-2 RGB chip of a field in ${chip.county} County, ${chip.state}, captured ${chip.sentinelDate}.`;
+  chipMetaEl.textContent = `Sentinel-2 · ${chip.sentinelDate} · ${chip.cloudCover.toFixed(1)}% cloud · ~600m`;
+  // Choices — true crop + 3 distractors, shuffled
+  const opts = shuffle([chip.trueCrop, ...chip.options]);
+  choicesEl.innerHTML = "";
+  for (const opt of opts) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "choice";
+    btn.dataset.crop = opt;
+    btn.textContent = fmtCrop(opt);
+    btn.addEventListener("click", () => onPick(btn, opt, chip));
+    choicesEl.appendChild(btn);
+  }
+  verdictEl.textContent = "";
+  verdictEl.className = "verdict";
+  awaitingNext = false;
+}
 
-  if (isTarget) {
-    // Target = dark fill inside (we want the player to NOT see crop info),
-    // rust outline, "?" + "TARGET / 2024" label.
-    const targetFill = document.createElementNS(svgNS, "polygon");
-    targetFill.setAttribute("points", pts.map((p) => `${p[0]},${p[1]}`).join(" "));
-    targetFill.setAttribute("fill", "#1b2a18");
-    targetFill.setAttribute("class", "field-poly target");
-    root.appendChild(targetFill);
+// ── Round resolution ────────────────────────────────────────────────
+function onPick(btn, crop, chip) {
+  if (awaitingNext) return;
+  awaitingNext = true;
+  const right = crop === chip.trueCrop;
+  for (const b of choicesEl.querySelectorAll(".choice")) {
+    b.disabled = true;
+    if (b.dataset.crop === chip.trueCrop) b.classList.add("right");
+    else if (b === btn && !right) b.classList.add("wrong");
+  }
+  if (right) {
+    score++;
+    scoreEl.textContent = String(score);
+    verdictEl.textContent = `Yep — ${fmtCrop(chip.trueCrop)}.`;
+    verdictEl.className = "verdict right";
+  } else {
+    verdictEl.textContent = `Nope — that's ${fmtCrop(chip.trueCrop)}.`;
+    verdictEl.className = "verdict wrong";
+  }
+  advanceTimer = setTimeout(advance, 1500);
+}
 
-    const cx = (minX + maxX) / 2;
-    const cy = (minY + maxY) / 2;
-    const q = document.createElementNS(svgNS, "text");
-    q.setAttribute("x", String(cx));
-    q.setAttribute("y", String(cy + 6));
-    q.setAttribute("text-anchor", "middle");
-    q.setAttribute("font-family", '"Playfair Display", Fraunces, Georgia, serif');
-    q.setAttribute("font-size", "34");
-    q.setAttribute("font-style", "italic");
-    q.setAttribute("fill", "#c4922b");
-    q.textContent = "?";
-    root.appendChild(q);
-
-    const t = document.createElementNS(svgNS, "text");
-    t.setAttribute("x", String(cx));
-    t.setAttribute("y", String(minY + 14));
-    t.setAttribute("class", "target-label");
-    t.textContent = "Target · 2024";
-    root.appendChild(t);
+function advance() {
+  advanceTimer = null;
+  roundIdx++;
+  if (roundIdx >= deck.length) {
+    endGame();
     return;
   }
-
-  // Neighbor: paint three horizontal ribbons inside the polygon, clipped.
-  // Ribbon 1 = Y-3 (top), Ribbon 3 = Y-1 (bottom).
-  const ribbonH = h / 3;
-  for (let i = 0; i < 3; i++) {
-    const crop = history[i];
-    const color = CROP_COLORS[crop] || "#444";
-    const r = document.createElementNS(svgNS, "rect");
-    r.setAttribute("x", String(minX));
-    r.setAttribute("y", String(minY + i * ribbonH));
-    r.setAttribute("width", String(w));
-    r.setAttribute("height", String(ribbonH));
-    r.setAttribute("fill", color);
-    r.setAttribute("clip-path", `url(#${polyId})`);
-    root.appendChild(r);
-    // Thin divider between ribbons so adjacent same-color years still
-    // read as separate.
-    if (i > 0) {
-      const div = document.createElementNS(svgNS, "line");
-      div.setAttribute("x1", String(minX));
-      div.setAttribute("y1", String(minY + i * ribbonH));
-      div.setAttribute("x2", String(maxX));
-      div.setAttribute("y2", String(minY + i * ribbonH));
-      div.setAttribute("class", "ribbon-divider");
-      div.setAttribute("clip-path", `url(#${polyId})`);
-      root.appendChild(div);
-    }
-  }
-
-  // Polygon outline on top, so neighbor edges are crisp.
-  const stroke = document.createElementNS(svgNS, "polygon");
-  stroke.setAttribute("points", pts.map((p) => `${p[0]},${p[1]}`).join(" "));
-  stroke.setAttribute("fill", "none");
-  stroke.setAttribute("class", "field-poly");
-  root.appendChild(stroke);
-
-  // Tiny year labels (Y-3 / Y-2 / Y-1) on the right edge of the polygon,
-  // only if there's room (skip on small polys).
-  if (h > 50 && w > 60) {
-    for (let i = 0; i < 3; i++) {
-      const lab = document.createElementNS(svgNS, "text");
-      lab.setAttribute("x", String(maxX - 2));
-      lab.setAttribute("y", String(minY + (i + 0.5) * ribbonH + 3));
-      lab.setAttribute("class", "year-label");
-      lab.textContent = `Y-${3 - i}`;
-      root.appendChild(lab);
-    }
-  }
-}
-
-function renderLegend(cluster) {
-  // Collect the unique crops used in this cluster's history + answer set.
-  const used = new Set();
-  for (const f of cluster.neighbors) for (const c of f.history) used.add(c);
-  // We always show the cluster's truth in the legend too — it might be a
-  // crop the neighbors don't use (e.g. corn target with pasture neighbors).
-  used.add(cluster.target.truth);
-  for (const c of cluster.target.history) used.add(c);
-  const sorted = Array.from(used).sort();
-  els.legend.innerHTML = sorted.map((c) => {
-    const color = CROP_COLORS[c] || "#444";
-    const label = CROP_LABELS[c] || c;
-    return `<span class="legend-item"><span class="legend-swatch" style="background:${color}"></span>${escapeHtml(label)}</span>`;
-  }).join("");
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[c]));
-}
-
-// Round flow
-function renderRound() {
-  const cluster = state.deck[state.index];
-  els.round.textContent = String(state.index + 1);
-  els.total.textContent = String(state.deck.length);
-  els.score.textContent = String(state.score);
-  els.region.textContent = cluster.region;
-  renderCluster(cluster);
-  renderLegend(cluster);
-  els.verdict.textContent = "";
-  els.verdict.classList.remove("right", "wrong");
-  for (const btn of els.choices.querySelectorAll("button")) {
-    btn.disabled = false;
-    btn.classList.remove("right", "wrong");
-  }
-  state.locked = false;
-}
-
-function onChoice(crop) {
-  if (state.locked) return;
-  state.locked = true;
-  const cluster = state.deck[state.index];
-  const correct = cluster.target.truth === crop;
-  if (correct) state.score += 1;
-  for (const btn of els.choices.querySelectorAll("button")) {
-    btn.disabled = true;
-    if (btn.dataset.crop === cluster.target.truth) btn.classList.add("right");
-    else if (btn.dataset.crop === crop && !correct) btn.classList.add("wrong");
-  }
-  els.verdict.classList.add(correct ? "right" : "wrong");
-  els.verdict.textContent = correct
-    ? `Right. ${CROP_LABELS[cluster.target.truth]}.`
-    : `Wrong. The target planted ${CROP_LABELS[cluster.target.truth].toLowerCase()}.`;
-  els.score.textContent = String(state.score);
-
-  window.setTimeout(() => {
-    state.index += 1;
-    if (state.index >= state.deck.length) showEnd();
-    else renderRound();
-  }, 1200);
-}
-
-function showEnd() {
-  els.stage.hidden = true;
-  els.endscreen.hidden = false;
-  els.finalScore.textContent = String(state.score);
-  els.finalTotal.textContent = String(state.deck.length);
-  els.endscreenNote.textContent = endNote(state.score, state.deck.length);
-}
-
-function endNote(score, total) {
-  const ratio = score / total;
-  if (ratio === 1) return "Clean read. You're seeing the rotation, not the color.";
-  if (ratio >= 0.75) return "Strong read. The neighbors are doing real work for you.";
-  if (ratio >= 0.5) return "Half-and-half. Look at the dominant Y-1 ribbon next time.";
-  if (ratio > 0) return "Rough round. Most rotations have a 2-year flip - check Y-2 vs Y-1.";
-  return "Tough deck. The rotation pattern is the whole game.";
-}
-
-// Wire-up
-els.choices.addEventListener("click", (e) => {
-  const target = e.target;
-  if (!(target instanceof HTMLElement)) return;
-  const btn = target.closest("button.choice");
-  if (!btn) return;
-  const crop = btn.dataset.crop;
-  if (crop) onChoice(crop);
-});
-
-els.playAgain.addEventListener("click", () => {
-  state.deck = buildDeck();
-  state.index = 0;
-  state.score = 0;
-  els.stage.hidden = false;
-  els.endscreen.hidden = true;
   renderRound();
-});
+}
 
-window.addEventListener("message", onHostMessage);
+function endGame() {
+  stageEl.hidden = true;
+  endscreenEl.hidden = false;
+  finalScoreEl.textContent = String(score);
+  finalTotalEl.textContent = String(deck.length);
+}
 
-(function init() {
-  state.deck = buildDeck();
-  renderRound();
-  postReady();
-})();
+// ── Wire up ─────────────────────────────────────────────────────────
+playAgainBtn.addEventListener("click", newGame);
+yearSelect.addEventListener("change", newGame);
+
+// ── postMessage to host: tile is ready ──────────────────────────────
+// Matches the uffda sandbox-postmessage protocol (Sprint 16).
+try {
+  window.parent?.postMessage({ type: "uffda:ready", tile: "guess-the-crop" }, "*");
+} catch (_) { /* sandboxed; silent */ }
+
+// Kick off.
+newGame();

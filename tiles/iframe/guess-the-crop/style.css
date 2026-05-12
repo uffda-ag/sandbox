@@ -1,9 +1,9 @@
 /*
- * Guess the Crop v2 - Rotation Guesser.
+ * Guess the Crop v3 - Real Sentinel-2 Imagery.
  *
- * SVG-only rendering of the field cluster (no embedded MapLibre per the
- * Gate A architect finding). Inherits the UFFDA palette so the tile feels
- * of-a-piece with the Sandbox without depending on any shared CSS.
+ * Inherits the UFFDA palette (dark green canvas, sage muted ink, prairie
+ * rust accent, DM Mono) so the tile feels of-a-piece with the Sandbox
+ * without depending on any shared CSS.
  */
 
 * {
@@ -62,7 +62,40 @@ body {
   font-size: 10px;
   letter-spacing: 0.14em;
   color: #6a7a5a;
-  font-style: normal;
+}
+
+/* Year filter row */
+.year-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6a7a5a;
+}
+
+.year-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+.year-select {
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: #111a10;
+  color: #ede8dc;
+  border: 1px solid #243320;
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.year-select:hover {
+  border-color: #6a7a5a;
 }
 
 /* Stage */
@@ -74,69 +107,43 @@ body {
   gap: 10px;
 }
 
-.board-frame {
-  width: 100%;
-  max-width: 480px;
+.chip-frame {
+  margin: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
 }
 
-.board {
-  width: 100%;
-  aspect-ratio: 4 / 3;
+.chip {
+  width: 256px;
+  height: 256px;
+  max-width: min(70vw, 256px);
+  max-height: min(70vw, 256px);
   border: 1px solid #243320;
   border-radius: 4px;
   background: #111a10;
+  image-rendering: pixelated;
   display: block;
 }
 
-.board-caption {
-  margin: 0;
-  font-size: 11px;
-  color: #a8ba98;
-  text-align: center;
-  max-width: 480px;
-  line-height: 1.45;
-}
-.board-caption strong {
-  color: #ede8dc;
-  font-weight: 700;
-}
-
-/* Legend - tight inline-flex */
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 12px;
+.chip-meta {
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #6a7a5a;
-}
-.legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-.legend-swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
 }
 
 .prompt {
+  margin: 0;
   font-size: 15px;
   color: #ede8dc;
   font-family: "Playfair Display", Fraunces, Georgia, serif;
   font-style: italic;
-  margin-top: 2px;
 }
 
-/* Choices */
+/* Choices — 4-button group */
 .choices {
   display: grid;
   grid-template-columns: repeat(4, minmax(80px, 1fr));
@@ -144,6 +151,7 @@ body {
   width: 100%;
   max-width: 480px;
 }
+
 @media (max-width: 480px) {
   .choices {
     grid-template-columns: repeat(2, minmax(110px, 1fr));
@@ -174,7 +182,7 @@ body {
 
 .choice:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.75;
 }
 
 .choice.right {
@@ -199,8 +207,13 @@ body {
   color: #a8ba98;
   text-align: center;
 }
-.verdict.right { color: #7aae60; }
-.verdict.wrong { color: #e07060; }
+
+.verdict.right {
+  color: #7aae60;
+}
+.verdict.wrong {
+  color: #e07060;
+}
 
 /* Endscreen */
 .endscreen {
@@ -229,10 +242,10 @@ body {
 
 .endscreen-note {
   font-size: 11px !important;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: #6a7a5a !important;
   max-width: 360px;
+  line-height: 1.55;
 }
 
 .play-again {
@@ -266,33 +279,4 @@ body {
   color: #6a7a5a;
   border-top: 1px solid #243320;
   padding-top: 6px;
-}
-
-/* SVG board styling (paint comes from JS for the crop colors) */
-.field-poly {
-  stroke: #243320;
-  stroke-width: 1;
-}
-.field-poly.target {
-  stroke: #c4922b; /* prairie rust */
-  stroke-width: 2.5;
-}
-.ribbon-divider {
-  stroke: rgba(255, 255, 255, 0.18);
-  stroke-width: 0.6;
-}
-.year-label {
-  fill: rgba(255, 255, 255, 0.55);
-  font-size: 8px;
-  font-family: "DM Mono", ui-monospace, monospace;
-  letter-spacing: 0.06em;
-  text-anchor: end;
-}
-.target-label {
-  fill: #c4922b;
-  font-size: 9px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  font-family: "DM Mono", ui-monospace, monospace;
-  text-anchor: middle;
 }
