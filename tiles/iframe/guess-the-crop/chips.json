@@ -1,42 +1,161 @@
-[
-  {
-    "id": 1,
-    "file": "chip-001-corn.png",
-    "truth": "corn"
-  },
-  {
-    "id": 2,
-    "file": "chip-002-soy.png",
-    "truth": "soy"
-  },
-  {
-    "id": 3,
-    "file": "chip-003-wheat.png",
-    "truth": "wheat"
-  },
-  {
-    "id": 4,
-    "file": "chip-004-sorghum.png",
-    "truth": "sorghum"
-  },
-  {
-    "id": 5,
-    "file": "chip-005-corn.png",
-    "truth": "corn"
-  },
-  {
-    "id": 6,
-    "file": "chip-006-soy.png",
-    "truth": "soy"
-  },
-  {
-    "id": 7,
-    "file": "chip-007-wheat.png",
-    "truth": "wheat"
-  },
-  {
-    "id": 8,
-    "file": "chip-008-sorghum.png",
-    "truth": "sorghum"
-  }
-]
+{
+  "_comment": "Guess the Crop v2 - Rotation Guesser. Each cluster is a target field + 6-8 neighbor fields, each with three prior years (Y-3, Y-2, Y-1) of USDA CDL crop classifications, plus the target's Y crop as the answer. Polygons are stored as arrays of [x, y] points in a normalized 0..1 viewport (game renders SVG at 480x360 inside that box). Realistic-but-synthetic clusters representative of common CONUS rotations - Iowa corn-soy, Plains wheat-fallow, Delta corn-rice-soy, etc. The mechanic exercises spatial-temporal reasoning, not color-id-from-RGB.",
+  "_schema_version": 2,
+  "clusters": [
+    {
+      "id": "iowa-cs-1",
+      "region": "Iowa (Story County area)",
+      "year": 2024,
+      "target": {
+        "polygon": [[0.40, 0.40], [0.60, 0.40], [0.60, 0.60], [0.40, 0.60]],
+        "history": ["soy", "corn", "soy"],
+        "truth": "corn"
+      },
+      "neighbors": [
+        { "polygon": [[0.18, 0.18], [0.38, 0.18], [0.38, 0.38], [0.18, 0.38]], "history": ["corn", "soy", "corn"] },
+        { "polygon": [[0.40, 0.18], [0.60, 0.18], [0.60, 0.38], [0.40, 0.38]], "history": ["soy", "corn", "soy"] },
+        { "polygon": [[0.62, 0.18], [0.82, 0.18], [0.82, 0.38], [0.62, 0.38]], "history": ["corn", "soy", "corn"] },
+        { "polygon": [[0.18, 0.40], [0.38, 0.40], [0.38, 0.60], [0.18, 0.60]], "history": ["corn", "soy", "corn"] },
+        { "polygon": [[0.62, 0.40], [0.82, 0.40], [0.82, 0.60], [0.62, 0.60]], "history": ["corn", "soy", "corn"] },
+        { "polygon": [[0.18, 0.62], [0.38, 0.62], [0.38, 0.82], [0.18, 0.82]], "history": ["soy", "corn", "soy"] },
+        { "polygon": [[0.40, 0.62], [0.60, 0.62], [0.60, 0.82], [0.40, 0.82]], "history": ["corn", "soy", "corn"] },
+        { "polygon": [[0.62, 0.62], [0.82, 0.62], [0.82, 0.82], [0.62, 0.82]], "history": ["soy", "corn", "soy"] }
+      ]
+    },
+    {
+      "id": "iowa-cs-2",
+      "region": "Northwest Iowa (corn-on-corn pocket)",
+      "year": 2024,
+      "target": {
+        "polygon": [[0.38, 0.42], [0.62, 0.42], [0.62, 0.62], [0.38, 0.62]],
+        "history": ["corn", "corn", "corn"],
+        "truth": "corn"
+      },
+      "neighbors": [
+        { "polygon": [[0.16, 0.20], [0.36, 0.20], [0.36, 0.40], [0.16, 0.40]], "history": ["corn", "corn", "soy"] },
+        { "polygon": [[0.38, 0.20], [0.62, 0.20], [0.62, 0.40], [0.38, 0.40]], "history": ["corn", "corn", "corn"] },
+        { "polygon": [[0.64, 0.20], [0.84, 0.20], [0.84, 0.40], [0.64, 0.40]], "history": ["soy", "corn", "corn"] },
+        { "polygon": [[0.16, 0.42], [0.36, 0.42], [0.36, 0.62], [0.16, 0.62]], "history": ["corn", "corn", "corn"] },
+        { "polygon": [[0.64, 0.42], [0.84, 0.42], [0.84, 0.62], [0.64, 0.62]], "history": ["corn", "corn", "soy"] },
+        { "polygon": [[0.16, 0.64], [0.36, 0.64], [0.36, 0.84], [0.16, 0.84]], "history": ["corn", "corn", "corn"] },
+        { "polygon": [[0.38, 0.64], [0.62, 0.64], [0.62, 0.84], [0.38, 0.84]], "history": ["corn", "soy", "corn"] }
+      ]
+    },
+    {
+      "id": "kansas-wheat-fallow",
+      "region": "Western Kansas (winter-wheat / fallow rotation)",
+      "year": 2024,
+      "target": {
+        "polygon": [[0.38, 0.40], [0.62, 0.40], [0.62, 0.60], [0.38, 0.60]],
+        "history": ["wheat", "fallow", "wheat"],
+        "truth": "fallow"
+      },
+      "neighbors": [
+        { "polygon": [[0.14, 0.18], [0.36, 0.18], [0.36, 0.38], [0.14, 0.38]], "history": ["fallow", "wheat", "fallow"] },
+        { "polygon": [[0.38, 0.18], [0.62, 0.18], [0.62, 0.38], [0.38, 0.38]], "history": ["wheat", "fallow", "wheat"] },
+        { "polygon": [[0.64, 0.18], [0.86, 0.18], [0.86, 0.38], [0.64, 0.38]], "history": ["fallow", "wheat", "fallow"] },
+        { "polygon": [[0.14, 0.40], [0.36, 0.40], [0.36, 0.60], [0.14, 0.60]], "history": ["fallow", "wheat", "fallow"] },
+        { "polygon": [[0.64, 0.40], [0.86, 0.40], [0.86, 0.60], [0.64, 0.60]], "history": ["fallow", "wheat", "fallow"] },
+        { "polygon": [[0.14, 0.62], [0.36, 0.62], [0.36, 0.82], [0.14, 0.82]], "history": ["wheat", "fallow", "wheat"] },
+        { "polygon": [[0.38, 0.62], [0.62, 0.62], [0.62, 0.82], [0.38, 0.82]], "history": ["fallow", "wheat", "fallow"] }
+      ]
+    },
+    {
+      "id": "delta-rice-soy",
+      "region": "Mississippi Delta (rice / soy rotation)",
+      "year": 2024,
+      "target": {
+        "polygon": [[0.40, 0.42], [0.62, 0.42], [0.62, 0.62], [0.40, 0.62]],
+        "history": ["rice", "soy", "rice"],
+        "truth": "soy"
+      },
+      "neighbors": [
+        { "polygon": [[0.18, 0.20], [0.38, 0.20], [0.38, 0.40], [0.18, 0.40]], "history": ["soy", "rice", "soy"] },
+        { "polygon": [[0.40, 0.20], [0.62, 0.20], [0.62, 0.40], [0.40, 0.40]], "history": ["rice", "soy", "rice"] },
+        { "polygon": [[0.64, 0.20], [0.84, 0.20], [0.84, 0.40], [0.64, 0.40]], "history": ["soy", "rice", "soy"] },
+        { "polygon": [[0.18, 0.42], [0.38, 0.42], [0.38, 0.62], [0.18, 0.62]], "history": ["rice", "soy", "rice"] },
+        { "polygon": [[0.64, 0.42], [0.84, 0.42], [0.84, 0.62], [0.64, 0.62]], "history": ["soy", "rice", "soy"] },
+        { "polygon": [[0.18, 0.64], [0.38, 0.64], [0.38, 0.84], [0.18, 0.84]], "history": ["rice", "soy", "rice"] },
+        { "polygon": [[0.40, 0.64], [0.62, 0.64], [0.62, 0.84], [0.40, 0.84]], "history": ["soy", "rice", "soy"] },
+        { "polygon": [[0.64, 0.64], [0.84, 0.64], [0.84, 0.84], [0.64, 0.84]], "history": ["rice", "soy", "rice"] }
+      ]
+    },
+    {
+      "id": "north-dakota-rotation",
+      "region": "North Dakota (spring-wheat / canola / soy)",
+      "year": 2024,
+      "target": {
+        "polygon": [[0.38, 0.40], [0.62, 0.40], [0.62, 0.60], [0.38, 0.60]],
+        "history": ["wheat", "canola", "soy"],
+        "truth": "wheat"
+      },
+      "neighbors": [
+        { "polygon": [[0.16, 0.18], [0.36, 0.18], [0.36, 0.38], [0.16, 0.38]], "history": ["soy", "wheat", "canola"] },
+        { "polygon": [[0.38, 0.18], [0.62, 0.18], [0.62, 0.38], [0.38, 0.38]], "history": ["canola", "soy", "wheat"] },
+        { "polygon": [[0.64, 0.18], [0.86, 0.18], [0.86, 0.38], [0.64, 0.38]], "history": ["wheat", "canola", "soy"] },
+        { "polygon": [[0.16, 0.40], [0.36, 0.40], [0.36, 0.60], [0.16, 0.60]], "history": ["soy", "wheat", "canola"] },
+        { "polygon": [[0.64, 0.40], [0.86, 0.40], [0.86, 0.60], [0.64, 0.60]], "history": ["canola", "soy", "wheat"] },
+        { "polygon": [[0.16, 0.62], [0.36, 0.62], [0.36, 0.82], [0.16, 0.82]], "history": ["wheat", "canola", "soy"] },
+        { "polygon": [[0.38, 0.62], [0.62, 0.62], [0.62, 0.82], [0.38, 0.82]], "history": ["soy", "wheat", "canola"] }
+      ]
+    },
+    {
+      "id": "central-illinois-cs",
+      "region": "Central Illinois (corn-soy 2-year)",
+      "year": 2024,
+      "target": {
+        "polygon": [[0.40, 0.40], [0.60, 0.40], [0.60, 0.60], [0.40, 0.60]],
+        "history": ["corn", "soy", "corn"],
+        "truth": "soy"
+      },
+      "neighbors": [
+        { "polygon": [[0.18, 0.18], [0.38, 0.18], [0.38, 0.38], [0.18, 0.38]], "history": ["soy", "corn", "soy"] },
+        { "polygon": [[0.40, 0.18], [0.60, 0.18], [0.60, 0.38], [0.40, 0.38]], "history": ["corn", "soy", "corn"] },
+        { "polygon": [[0.62, 0.18], [0.82, 0.18], [0.82, 0.38], [0.62, 0.38]], "history": ["soy", "corn", "soy"] },
+        { "polygon": [[0.18, 0.40], [0.38, 0.40], [0.38, 0.60], [0.18, 0.60]], "history": ["soy", "corn", "soy"] },
+        { "polygon": [[0.62, 0.40], [0.82, 0.40], [0.82, 0.60], [0.62, 0.60]], "history": ["soy", "corn", "soy"] },
+        { "polygon": [[0.18, 0.62], [0.38, 0.62], [0.38, 0.82], [0.18, 0.82]], "history": ["corn", "soy", "corn"] },
+        { "polygon": [[0.40, 0.62], [0.60, 0.62], [0.60, 0.82], [0.40, 0.82]], "history": ["soy", "corn", "soy"] },
+        { "polygon": [[0.62, 0.62], [0.82, 0.62], [0.82, 0.82], [0.62, 0.82]], "history": ["corn", "soy", "corn"] }
+      ]
+    },
+    {
+      "id": "pasture-anchor",
+      "region": "Eastern Kansas (corn-soy bounded by pasture)",
+      "year": 2024,
+      "target": {
+        "polygon": [[0.40, 0.42], [0.62, 0.42], [0.62, 0.62], [0.40, 0.62]],
+        "history": ["soy", "corn", "soy"],
+        "truth": "corn"
+      },
+      "neighbors": [
+        { "polygon": [[0.18, 0.20], [0.38, 0.20], [0.38, 0.40], [0.18, 0.40]], "history": ["pasture", "pasture", "pasture"] },
+        { "polygon": [[0.40, 0.20], [0.62, 0.20], [0.62, 0.40], [0.40, 0.40]], "history": ["corn", "soy", "corn"] },
+        { "polygon": [[0.64, 0.20], [0.84, 0.20], [0.84, 0.40], [0.64, 0.40]], "history": ["soy", "corn", "soy"] },
+        { "polygon": [[0.18, 0.42], [0.38, 0.42], [0.38, 0.62], [0.18, 0.62]], "history": ["pasture", "pasture", "pasture"] },
+        { "polygon": [[0.64, 0.42], [0.84, 0.42], [0.84, 0.62], [0.64, 0.62]], "history": ["corn", "soy", "corn"] },
+        { "polygon": [[0.18, 0.64], [0.38, 0.64], [0.38, 0.84], [0.18, 0.84]], "history": ["pasture", "pasture", "pasture"] },
+        { "polygon": [[0.40, 0.64], [0.62, 0.64], [0.62, 0.84], [0.40, 0.84]], "history": ["corn", "soy", "corn"] }
+      ]
+    },
+    {
+      "id": "alfalfa-anchor",
+      "region": "Central Wisconsin (corn-alfalfa rotation)",
+      "year": 2024,
+      "target": {
+        "polygon": [[0.38, 0.40], [0.62, 0.40], [0.62, 0.60], [0.38, 0.60]],
+        "history": ["alfalfa", "alfalfa", "corn"],
+        "truth": "alfalfa"
+      },
+      "neighbors": [
+        { "polygon": [[0.16, 0.18], [0.36, 0.18], [0.36, 0.38], [0.16, 0.38]], "history": ["corn", "alfalfa", "alfalfa"] },
+        { "polygon": [[0.38, 0.18], [0.62, 0.18], [0.62, 0.38], [0.38, 0.38]], "history": ["alfalfa", "alfalfa", "corn"] },
+        { "polygon": [[0.64, 0.18], [0.86, 0.18], [0.86, 0.38], [0.64, 0.38]], "history": ["alfalfa", "corn", "alfalfa"] },
+        { "polygon": [[0.16, 0.40], [0.36, 0.40], [0.36, 0.60], [0.16, 0.60]], "history": ["corn", "alfalfa", "alfalfa"] },
+        { "polygon": [[0.64, 0.40], [0.86, 0.40], [0.86, 0.60], [0.64, 0.60]], "history": ["alfalfa", "alfalfa", "corn"] },
+        { "polygon": [[0.16, 0.62], [0.36, 0.62], [0.36, 0.82], [0.16, 0.82]], "history": ["alfalfa", "corn", "alfalfa"] },
+        { "polygon": [[0.38, 0.62], [0.62, 0.62], [0.62, 0.82], [0.38, 0.82]], "history": ["corn", "alfalfa", "alfalfa"] }
+      ]
+    }
+  ]
+}
