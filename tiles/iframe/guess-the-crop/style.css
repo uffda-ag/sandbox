@@ -1,0 +1,231 @@
+/*
+ * Guess the Crop — minimal styling. Inherits the wrapper's chrome so the
+ * tile feels of-a-piece with the UFFDA Sandbox without depending on any
+ * shared CSS. Self-contained per the iframe-lane constraint.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #0f1a0e; /* canvas — matches UFFDA palette */
+  color: #ede8dc; /* ink */
+  font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.game {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 20px;
+  gap: 14px;
+}
+
+/* ── HUD ─────────────────────────────────────────────────────────── */
+.hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a8ba98; /* ink-muted */
+}
+
+.hud-label {
+  margin-right: 6px;
+  color: #6a7a5a;
+}
+
+.hud-value {
+  color: #ede8dc;
+  font-weight: 700;
+}
+
+.hud-sep {
+  color: #6a7a5a;
+  margin: 0 4px;
+}
+
+/* ── Stage ───────────────────────────────────────────────────────── */
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.chip-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip {
+  width: 192px;
+  height: 192px;
+  image-rendering: pixelated; /* keep the 64×64 placeholder crisp */
+  border: 1px solid #243320;
+  border-radius: 4px;
+  background: #111a10; /* elevated — matches loading state */
+}
+
+.chip-caption {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6a7a5a; /* ink-dim — quiet but readable */
+  text-align: center;
+  max-width: 320px;
+}
+
+.prompt {
+  font-size: 16px;
+  color: #ede8dc;
+  font-family: "Playfair Display", Fraunces, Georgia, serif;
+  font-style: italic;
+}
+
+/* ── Choices ─────────────────────────────────────────────────────── */
+.choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(110px, 1fr));
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.choice {
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: #111a10;
+  color: #a8ba98;
+  border: 1px solid #243320;
+  border-radius: 3px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease,
+    background 120ms ease;
+}
+
+.choice:hover {
+  border-color: #6a7a5a;
+  color: #ede8dc;
+}
+
+.choice:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.choice.right {
+  border-color: #7aae60;
+  color: #7aae60;
+  background: rgba(122, 174, 96, 0.1);
+}
+
+.choice.wrong {
+  border-color: #e07060;
+  color: #e07060;
+  background: rgba(224, 112, 96, 0.1);
+}
+
+/* ── Verdict ─────────────────────────────────────────────────────── */
+.verdict {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  min-height: 14px;
+  color: #a8ba98;
+  text-align: center;
+}
+
+.verdict.right {
+  color: #7aae60;
+}
+
+.verdict.wrong {
+  color: #e07060;
+}
+
+/* ── Endscreen ───────────────────────────────────────────────────── */
+.endscreen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 12px;
+}
+
+.endscreen h2 {
+  margin: 0;
+  font-family: "Playfair Display", Fraunces, Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #ede8dc;
+}
+
+.endscreen p {
+  margin: 0;
+  color: #a8ba98;
+}
+
+.endscreen-note {
+  font-size: 11px !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6a7a5a !important;
+  max-width: 320px;
+}
+
+.play-again {
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: transparent;
+  color: #c4922b; /* accent rust */
+  border: 1px solid #c4922b;
+  border-radius: 3px;
+  padding: 10px 16px;
+  cursor: pointer;
+  margin-top: 6px;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+}
+
+.play-again:hover {
+  background: #c4922b;
+  color: #0f1a0e;
+}
+
+/* ── Meta footer ─────────────────────────────────────────────────── */
+.meta {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #6a7a5a;
+  border-top: 1px solid #243320;
+  padding-top: 8px;
+}
