@@ -3,10 +3,10 @@
   "slug": "guess-the-crop",
   "type": "iframe",
   "status": "live",
-  "tagline": "Predict next year's crop from the rotation pattern.",
-  "description": "Spatial-temporal reasoning, not color guessing. We show you a target field with a rust outline plus six to eight neighbor fields. Each neighbor is painted with three years of CDL crop history as horizontal ribbons (Y-3 top, Y-1 bottom). You read the rotation pattern and predict what the target planted this year. Eight realistic CONUS clusters - corn-soy, wheat-fallow, rice-soy delta, wheat-canola-soy, alfalfa-corn, more. The educational lift is the temporal rotation pattern that makes satellite ag-data interpretable.",
+  "tagline": "Can you tell crops from real satellite chips?",
+  "description": "Real Sentinel-2 imagery, CDL ground truth, year filter 2020–2024. Thirty-three CONUS fields sampled across the country at peak growing season — corn belt, plains wheat, rice delta, cotton south, California orchards. We show you the chip plus the state, county, and year; you pick the crop from a four-option group. Eight rounds per game, score tally, play again. The educational lift is the difficulty itself — sometimes even with real images it's hard, and that's why satellite ag-analytics is non-trivial.",
   "icon": "play",
-  "tags": ["game", "cdl", "rotation", "crop-id", "education"],
+  "tags": ["game", "sentinel-2", "cdl", "crop-id", "education", "satellite"],
   "author": {
     "name": "UFFDA core",
     "site": "https://uffda.ag"
