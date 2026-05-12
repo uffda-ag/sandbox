@@ -77,10 +77,23 @@ function onHostMessage(event) {
 }
 
 // ─── Deck management. ──────────────────────────────────────────────────────
-async function loadDeck() {
-  const res = await fetch("chips.json", { credentials: "omit" });
-  if (!res.ok) throw new Error("Failed to load chips.json");
-  const deck = await res.json();
+// Inlined chip manifest. fetch("chips.json") doesn't work from a sandboxed
+// iframe without allow-same-origin (null-origin → CORS blocks the request);
+// chips.json stays on disk for human reference but the runtime reads from
+// here. If you add chips, update both.
+const CHIPS = [
+  { id: 1, file: "chip-001-corn.png", truth: "corn" },
+  { id: 2, file: "chip-002-soy.png", truth: "soy" },
+  { id: 3, file: "chip-003-wheat.png", truth: "wheat" },
+  { id: 4, file: "chip-004-sorghum.png", truth: "sorghum" },
+  { id: 5, file: "chip-005-corn.png", truth: "corn" },
+  { id: 6, file: "chip-006-soy.png", truth: "soy" },
+  { id: 7, file: "chip-007-wheat.png", truth: "wheat" },
+  { id: 8, file: "chip-008-sorghum.png", truth: "sorghum" },
+];
+
+function loadDeck() {
+  const deck = CHIPS.slice();
   // Fisher-Yates shuffle for variety across replays.
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
