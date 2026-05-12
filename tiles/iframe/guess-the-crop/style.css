@@ -1,7 +1,9 @@
 /*
- * Guess the Crop — minimal styling. Inherits the wrapper's chrome so the
- * tile feels of-a-piece with the UFFDA Sandbox without depending on any
- * shared CSS. Self-contained per the iframe-lane constraint.
+ * Guess the Crop v2 - Rotation Guesser.
+ *
+ * SVG-only rendering of the field cluster (no embedded MapLibre per the
+ * Gate A architect finding). Inherits the UFFDA palette so the tile feels
+ * of-a-piece with the Sandbox without depending on any shared CSS.
  */
 
 * {
@@ -13,7 +15,7 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: #0f1a0e; /* canvas — matches UFFDA palette */
+  background: #0f1a0e; /* canvas */
   color: #ede8dc; /* ink */
   font-family: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 14px;
@@ -24,19 +26,20 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 16px 20px;
-  gap: 14px;
+  padding: 14px 18px;
+  gap: 10px;
 }
 
-/* ── HUD ─────────────────────────────────────────────────────────── */
+/* HUD */
 .hud {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
+  gap: 10px;
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #a8ba98; /* ink-muted */
+  color: #a8ba98;
 }
 
 .hud-label {
@@ -54,68 +57,109 @@ body {
   margin: 0 4px;
 }
 
-/* ── Stage ───────────────────────────────────────────────────────── */
+.hud-mid {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: #6a7a5a;
+  font-style: normal;
+}
+
+/* Stage */
 .stage {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
+  gap: 10px;
 }
 
-.chip-frame {
+.board-frame {
+  width: 100%;
+  max-width: 480px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
 }
 
-.chip {
-  width: 192px;
-  height: 192px;
-  image-rendering: pixelated; /* keep the 64×64 placeholder crisp */
+.board {
+  width: 100%;
+  aspect-ratio: 4 / 3;
   border: 1px solid #243320;
   border-radius: 4px;
-  background: #111a10; /* elevated — matches loading state */
+  background: #111a10;
+  display: block;
 }
 
-.chip-caption {
+.board-caption {
   margin: 0;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #6a7a5a; /* ink-dim — quiet but readable */
+  font-size: 11px;
+  color: #a8ba98;
   text-align: center;
-  max-width: 320px;
+  max-width: 480px;
+  line-height: 1.45;
+}
+.board-caption strong {
+  color: #ede8dc;
+  font-weight: 700;
+}
+
+/* Legend - tight inline-flex */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 12px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6a7a5a;
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .prompt {
-  font-size: 16px;
+  font-size: 15px;
   color: #ede8dc;
   font-family: "Playfair Display", Fraunces, Georgia, serif;
   font-style: italic;
+  margin-top: 2px;
 }
 
-/* ── Choices ─────────────────────────────────────────────────────── */
+/* Choices */
 .choices {
   display: grid;
-  grid-template-columns: repeat(2, minmax(110px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(80px, 1fr));
+  gap: 6px;
   width: 100%;
-  max-width: 320px;
+  max-width: 480px;
+}
+@media (max-width: 480px) {
+  .choices {
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+  }
 }
 
 .choice {
   font: inherit;
-  font-size: 12px;
-  letter-spacing: 0.18em;
+  font-size: 11px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   background: #111a10;
   color: #a8ba98;
   border: 1px solid #243320;
   border-radius: 3px;
-  padding: 10px 12px;
+  padding: 8px 6px;
   cursor: pointer;
   transition:
     border-color 120ms ease,
@@ -145,7 +189,7 @@ body {
   background: rgba(224, 112, 96, 0.1);
 }
 
-/* ── Verdict ─────────────────────────────────────────────────────── */
+/* Verdict */
 .verdict {
   margin: 0;
   font-size: 12px;
@@ -155,16 +199,10 @@ body {
   color: #a8ba98;
   text-align: center;
 }
+.verdict.right { color: #7aae60; }
+.verdict.wrong { color: #e07060; }
 
-.verdict.right {
-  color: #7aae60;
-}
-
-.verdict.wrong {
-  color: #e07060;
-}
-
-/* ── Endscreen ───────────────────────────────────────────────────── */
+/* Endscreen */
 .endscreen {
   flex: 1;
   display: flex;
@@ -194,7 +232,7 @@ body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #6a7a5a !important;
-  max-width: 320px;
+  max-width: 360px;
 }
 
 .play-again {
@@ -203,7 +241,7 @@ body {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   background: transparent;
-  color: #c4922b; /* accent rust */
+  color: #c4922b;
   border: 1px solid #c4922b;
   border-radius: 3px;
   padding: 10px 16px;
@@ -219,7 +257,7 @@ body {
   color: #0f1a0e;
 }
 
-/* ── Meta footer ─────────────────────────────────────────────────── */
+/* Meta footer */
 .meta {
   text-align: center;
   font-size: 10px;
@@ -227,5 +265,34 @@ body {
   text-transform: uppercase;
   color: #6a7a5a;
   border-top: 1px solid #243320;
-  padding-top: 8px;
+  padding-top: 6px;
+}
+
+/* SVG board styling (paint comes from JS for the crop colors) */
+.field-poly {
+  stroke: #243320;
+  stroke-width: 1;
+}
+.field-poly.target {
+  stroke: #c4922b; /* prairie rust */
+  stroke-width: 2.5;
+}
+.ribbon-divider {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 0.6;
+}
+.year-label {
+  fill: rgba(255, 255, 255, 0.55);
+  font-size: 8px;
+  font-family: "DM Mono", ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  text-anchor: end;
+}
+.target-label {
+  fill: #c4922b;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-family: "DM Mono", ui-monospace, monospace;
+  text-anchor: middle;
 }

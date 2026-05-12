@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Guess the Crop</title>
+    <title>Guess the Crop — Rotation Guesser</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -15,6 +15,7 @@
           <span class="hud-sep">/</span>
           <span class="hud-value" id="total">8</span>
         </div>
+        <div class="hud-mid" id="region" aria-live="polite"></div>
         <div class="hud-right">
           <span class="hud-label">Score</span>
           <span class="hud-value" id="score">0</span>
@@ -22,35 +23,42 @@
       </header>
 
       <section class="stage" id="stage">
-        <div class="chip-frame">
-          <img id="chip" class="chip" alt="Satellite-derived chip of an unknown field" />
-          <!--
-            Gate A acceptance: the placeholder caption must appear on EVERY
-            chip rendering, not just one. It's part of the DOM, not the
-            PNG, so it's true for every round.
-          -->
-          <p class="chip-caption" id="chip-caption">
-            Placeholder chip — real Sentinel-2 in Sprint 17
+        <div class="board-frame">
+          <svg
+            id="board"
+            class="board"
+            viewBox="0 0 480 360"
+            role="img"
+            aria-label="Field cluster with target field outlined in rust and neighbor fields painted with three years of CDL rotation ribbons"
+          ></svg>
+          <p class="board-caption" id="board-caption">
+            The rust-outlined field is the target. Each polygon shows the last three years of CDL crops as horizontal ribbons (Y-3 on top, Y-1 on the bottom). Guess what the target's <strong>2024</strong> crop was.
           </p>
         </div>
 
-        <div class="prompt">What crop is this?</div>
+        <div class="legend" id="legend" aria-label="CDL crop legend"></div>
+
+        <div class="prompt">What did the target field plant this year?</div>
 
         <div class="choices" id="choices">
           <button type="button" class="choice" data-crop="corn">Corn</button>
           <button type="button" class="choice" data-crop="soy">Soy</button>
-          <button type="button" class="choice" data-crop="wheat">Wheat</button>
-          <button type="button" class="choice" data-crop="sorghum">Sorghum</button>
+          <button type="button" class="choice" data-crop="wheat">Winter wheat</button>
+          <button type="button" class="choice" data-crop="canola">Canola</button>
+          <button type="button" class="choice" data-crop="rice">Rice</button>
+          <button type="button" class="choice" data-crop="alfalfa">Alfalfa</button>
+          <button type="button" class="choice" data-crop="fallow">Fallow</button>
+          <button type="button" class="choice" data-crop="pasture">Pasture</button>
         </div>
 
         <p class="verdict" id="verdict" aria-live="polite"></p>
       </section>
 
       <section class="endscreen" id="endscreen" hidden>
-        <h2>Game over.</h2>
+        <h2>Round closed.</h2>
         <p>
-          You got <span id="final-score">0</span> out of
-          <span id="final-total">8</span>.
+          You read <span id="final-score">0</span> of
+          <span id="final-total">8</span> rotations.
         </p>
         <p class="endscreen-note" id="endscreen-note"></p>
         <button type="button" class="play-again" id="play-again">
@@ -59,7 +67,7 @@
       </section>
 
       <footer class="meta">
-        <span>USDA CDL ground truth · MIT · uffda.ag</span>
+        <span>Spatial-temporal reasoning · USDA CDL inspired · MIT · uffda.ag</span>
       </footer>
     </main>
 

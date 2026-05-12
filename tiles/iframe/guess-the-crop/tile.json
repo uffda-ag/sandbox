@@ -3,16 +3,16 @@
   "slug": "guess-the-crop",
   "type": "iframe",
   "status": "live",
-  "tagline": "Can you tell corn from soy from a satellite chip?",
-  "description": "30-second game. We show you a satellite-derived image chip of a field. You guess the crop. Built on USDA CDL ground truth — 8 pre-staged chips covering corn, soy, wheat, and sorghum. Score tally; play again. Chips in this build are placeholders; real Sentinel-2 RGB lands in Sprint 17.",
+  "tagline": "Predict next year's crop from the rotation pattern.",
+  "description": "Spatial-temporal reasoning, not color guessing. We show you a target field with a rust outline plus six to eight neighbor fields. Each neighbor is painted with three years of CDL crop history as horizontal ribbons (Y-3 top, Y-1 bottom). You read the rotation pattern and predict what the target planted this year. Eight realistic CONUS clusters - corn-soy, wheat-fallow, rice-soy delta, wheat-canola-soy, alfalfa-corn, more. The educational lift is the temporal rotation pattern that makes satellite ag-data interpretable.",
   "icon": "play",
-  "tags": ["game", "cdl", "sentinel-2", "crop-id"],
+  "tags": ["game", "cdl", "rotation", "crop-id", "education"],
   "author": {
     "name": "UFFDA core",
     "site": "https://uffda.ag"
   },
   "license": "MIT",
   "featured": true,
-  "createdAt": "2026-05-11",
+  "createdAt": "2026-05-12",
   "entry": "index.html"
 }
