@@ -2,9 +2,9 @@
   "name": "Guess the Crop",
   "slug": "guess-the-crop",
   "type": "iframe",
-  "status": "live",
-  "tagline": "Can you tell crops from real satellite chips?",
-  "description": "Real Sentinel-2 imagery, CDL ground truth, year filter 2020–2024. Thirty-three CONUS fields sampled across the country at peak growing season — corn belt, plains wheat, rice delta, cotton south, California orchards. We show you the chip plus the state, county, and year; you pick the crop from a four-option group. Eight rounds per game, score tally, play again. The educational lift is the difficulty itself — sometimes even with real images it's hard, and that's why satellite ag-analytics is non-trivial.",
+  "status": "in-dev",
+  "tagline": "Paused for a PRD pass — back with a sharper game design.",
+  "description": "WIP — v3 paused for PRD pass after surfacing targeting and visual-differentiation issues (chips show 4–8 fields with no target indicator; chip filenames leak the answer; year filter is invisible to the player). The mechanic returns once the design is sharper. Prior shape: Real Sentinel-2 chips, CDL ground truth, 33 CONUS fields, four-option pick, eight rounds, score tally. The educational lift is the difficulty itself — sometimes even with real images it's hard, and that's why satellite ag-analytics is non-trivial.",
   "icon": "play",
   "tags": ["game", "sentinel-2", "cdl", "crop-id", "education", "satellite"],
   "author": {
