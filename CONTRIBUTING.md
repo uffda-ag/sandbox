@@ -164,8 +164,6 @@ Field notes:
 
 ## The `window.uffda` API
 
-Canonical implementation lives at `uffda-ag/uffda/lib/uffda-api.ts`. Changes to the contract require coordinated PRs on both repos.
-
 Tiles can read UFFDA's state through a small, stable API. Read-only. Never writes.
 
 ### Iframe tiles (via `postMessage`)
