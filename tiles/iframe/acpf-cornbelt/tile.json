@@ -2,8 +2,8 @@
   "name": "ACPF Corn Belt fields",
   "slug": "acpf-cornbelt",
   "type": "iframe",
-  "status": "live",
-  "tagline": "Pre-2008 field geometry, 4 Corn Belt states. Public domain.",
+  "status": "in-dev",
+  "tagline": "In dev — pre-2008 field geometry, 4 Corn Belt states. Sprint 20 refactor.",
   "description": "Pre-2008 USDA FSA Common Land Unit (CLU) field geometry for Iowa, Minnesota, Wisconsin, Illinois. Released by USDA ARS as the Agricultural Conservation Planning Framework (ACPF) field-boundary set — HUC-12 conservation-planning use case at watershed scale. Section 1619 of the 2008 Farm Bill locked modern CLU, but isn't retroactive; ACPF redistributes the pre-2008 snapshot legally. Geometry is frozen at the pre-2008 CLU snapshot — field subdivisions or consolidations since then aren't reflected. Public domain (US Government work).",
   "icon": "globe",
   "tags": [
