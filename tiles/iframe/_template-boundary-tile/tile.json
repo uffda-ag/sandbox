@@ -1,0 +1,19 @@
+{
+  "name": "{{TEMPLATE_NAME}}",
+  "slug": "{{TEMPLATE_SLUG}}",
+  "type": "iframe",
+  "status": "live",
+  "tagline": "{{TEMPLATE_TAGLINE}}",
+  "description": "{{TEMPLATE_DESCRIPTION}}",
+  "icon": "globe",
+  "tags": ["{{TEMPLATE_TAG_1}}", "{{TEMPLATE_TAG_2}}"],
+  "author": {
+    "name": "{{TEMPLATE_AUTHOR_NAME}}",
+    "site": "{{TEMPLATE_AUTHOR_SITE}}"
+  },
+  "license": "{{TEMPLATE_LICENSE}}",
+  "licenseNote": "{{TEMPLATE_LICENSE_NOTE}}",
+  "featured": false,
+  "createdAt": "{{TEMPLATE_CREATED_AT}}",
+  "entry": "index.html"
+}

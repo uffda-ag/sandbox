@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>California Statewide Crop Mapping — UFFDA Sandbox</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <!--
+    Sprint 19 fix-cycle: stripped duplicative chrome (title, tagline,
+    caveat-panel, attribution). Outer Next.js /sandbox/<slug>/ route
+    already renders that from the tile registry, and the iframe runs
+    under sandbox="allow-scripts allow-popups" (no allow-same-origin)
+    which made the runtime tile.json fetch fail — blanking the map.
+  -->
+  <body data-paint-mode="fill-outline">
+    <div id="map" class="map"></div>
+
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/pmtiles@4.4.1/dist/pmtiles.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "California Statewide Crop Mapping",
+  "slug": "ca-scm",
+  "type": "iframe",
+  "status": "in-dev",
+  "tagline": "In dev — California-only, homogeneous-crop areas. Sprint 20 refactor.",
+  "description": "438,790 California field polygons from the Department of Water Resources / Land IQ Statewide Crop Mapping program. Water-year coverage 2014, 2016, 2018-2024 (2023 + 2024 provisional). >98% crop-ID accuracy; minimum field size 0.5-2.0 acres. Structural caveat: polygons are homogeneous-crop areas, not legal parcels — two adjoining same-crop fields can collapse to one polygon. Already fiboa-native; sourced via the fiboa pipeline on Source Cooperative (source.coop/fiboa/us-ca-scm). CC-0 — reuse without restriction.",
+  "icon": "globe",
+  "tags": [
+    "boundary",
+    "california",
+    "ca-scm",
+    "fiboa",
+    "cc0"
+  ],
+  "author": {
+    "name": "California DWR / Land IQ via fiboa",
+    "site": "https://source.coop/fiboa/us-ca-scm"
+  },
+  "license": "CC0-1.0",
+  "featured": false,
+  "createdAt": "2026-05-13",
+  "entry": "index.html",
+  "licenseNote": "CC-0; attribution to CA DWR / Land IQ encouraged but not required."
+}
