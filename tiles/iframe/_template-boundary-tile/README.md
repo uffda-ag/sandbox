@@ -35,4 +35,11 @@ Per-source ingest scripts live at `web/scripts/sandbox_tiles/<slug>/ingest.mjs`.
 5. Write the final `fields.pmtiles` into this tile folder's `tiles/` subdir.
 6. Emit the populated `tile.json` via `buildTileJson(...)`.
 
-Requires `ogr2ogr` (GDAL) and `tippecanoe` on PATH.
+## Tooling requirements
+
+Originally specced as "ogr2ogr (GDAL) + tippecanoe on PATH" — that's still the spirit, but the actual implementation routes through:
+
+- **Python + pyogrio** (replaces ogr2ogr) — pyogrio ships its own bundled GDAL, so a separate libgdal install isn't needed. Install with `py -m pip install pyogrio shapely pyproj` on Windows, or `python3 -m pip install ...` elsewhere. The shared helper `web/scripts/sandbox_tiles/_lib/py/shp_to_geojsonseq.py` does the reproject + property-stamp + GeoJSONSeq pass.
+- **tippecanoe** — installed natively on Linux/macOS, or via WSL on Windows. The shared helper auto-routes Windows hosts through `wsl -- tippecanoe …` with `/mnt/<drive>/...` path translation. WSL install: `wsl sudo apt-get install -y tippecanoe`.
+
+If either tool is missing the ingest scripts fail with a clear `installHint` pointing at the install step above.

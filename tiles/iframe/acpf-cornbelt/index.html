@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ACPF Corn Belt fields — UFFDA Sandbox</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-paint-mode="fill-outline">
+    <header class="hud">
+      <h1 class="hud-title" id="tile-title">ACPF Corn Belt fields</h1>
+      <p class="hud-tagline" id="tile-tagline"></p>
+      <!-- State filter pill row. JS reads `data-state` and pushes a
+           `setFilter` against the fields layer. `data-state=""` means
+           "all states". -->
+      <div class="state-filter" id="state-filter" role="group" aria-label="State filter">
+        <button type="button" class="state-pill is-active" data-state="">All</button>
+        <button type="button" class="state-pill" data-state="IA">IA</button>
+        <button type="button" class="state-pill" data-state="MN">MN</button>
+        <button type="button" class="state-pill" data-state="WI">WI</button>
+        <button type="button" class="state-pill" data-state="IL">IL</button>
+      </div>
+    </header>
+
+    <main class="map-shell">
+      <div id="map" class="map"></div>
+
+      <aside class="caveat-panel" id="caveat" aria-live="polite"></aside>
+    </main>
+
+    <footer class="meta">
+      <span id="attribution-strip"></span>
+      <span class="powered-by">powered by uffda.ag</span>
+    </footer>
+
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/pmtiles@4.4.1/dist/pmtiles.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
