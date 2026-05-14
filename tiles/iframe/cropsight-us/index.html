@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{NAME}} — UFFDA Sandbox</title>
+    <title>CropSight US — UFFDA Sandbox</title>
 
     <link
       rel="stylesheet"
@@ -11,24 +11,17 @@
     />
     <link rel="stylesheet" href="style.css" />
   </head>
-  <body data-paint-mode="sparse-markers">
-    <header class="hud">
-      <h1 class="hud-title" id="tile-title">{{NAME}}</h1>
-      <p class="hud-tagline" id="tile-tagline">{{TAGLINE}}</p>
-    </header>
-
-    <main class="map-shell">
-      <div id="map" class="map"></div>
-
-      <aside class="caveat-panel" id="caveat" aria-live="polite"></aside>
-    </main>
-
-    <footer class="meta">
-      <span id="attribution-strip">{{ATTRIBUTION}}</span>
-      <span class="powered-by">powered by uffda.ag</span>
-    </footer>
-
-    <script type="application/json" id="tile-meta"></script>
+  <!--
+    Sprint 19 fix-cycle: stripped duplicative chrome (title, tagline,
+    caveat-panel, attribution, tile-meta script tag). Outer Next.js
+    /sandbox/<slug>/ route already renders title/tagline/attribution
+    from the tile registry, and the iframe runs under sandbox="allow-
+    scripts allow-popups" (no allow-same-origin) which made the runtime
+    tile.json fetch fail with an opaque-origin CORS reject — blanking
+    every map. Map mounts directly with hard-coded constants now.
+  -->
+  <body data-paint-mode="fill-outline">
+    <div id="map" class="map"></div>
 
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <script src="https://unpkg.com/pmtiles@4.4.1/dist/pmtiles.js"></script>

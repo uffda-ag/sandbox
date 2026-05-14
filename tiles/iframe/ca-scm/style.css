@@ -1,8 +1,10 @@
 /*
  * California Statewide Crop Mapping sandbox-tile styles.
  *
- * Cream-white palette identical to the boundary-tile scaffold (ink
- * #2e3a25 on cream #f7f1e1). No filter UI — single-state tile.
+ * Sprint 19 fix-cycle: stripped chrome rules (.hud, .hud-title,
+ * .hud-tagline, .caveat-panel, .meta, .powered-by) since the iframe no
+ * longer renders them — outer Next.js sandbox route owns that chrome.
+ * Only thing left is the full-viewport map canvas.
  */
 
 * {
@@ -22,76 +24,7 @@ body {
   line-height: 1.4;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-}
-
-.hud {
-  flex: 0 0 auto;
-  padding: 10px 14px 8px;
-  border-bottom: 1px solid rgba(46, 58, 37, 0.15);
-}
-
-.hud-title {
-  margin: 0 0 2px;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.hud-tagline {
-  margin: 0;
-  font-size: 11px;
-  color: #5a6a4a;
-  letter-spacing: 0.02em;
-}
-
-.map-shell {
-  flex: 1 1 auto;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
 .map {
-  flex: 1 1 auto;
-  min-height: 0;
   width: 100%;
-}
-
-.caveat-panel {
-  flex: 0 0 auto;
-  padding: 8px 14px;
-  font-size: 11px;
-  line-height: 1.45;
-  color: #3d4a36;
-  background: rgba(247, 241, 225, 0.92);
-  border-top: 1px solid rgba(46, 58, 37, 0.12);
-  max-height: 30%;
-  overflow-y: auto;
-}
-
-.caveat-panel:empty {
-  display: none;
-}
-
-.meta {
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px 8px;
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  color: #6a7a5a;
-  border-top: 1px solid rgba(46, 58, 37, 0.1);
-}
-
-.powered-by {
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  opacity: 0.7;
+  height: 100%;
 }

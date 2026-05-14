@@ -3,11 +3,12 @@
 // Single-state tile, no filter UI. Renders the fiboa-via-source.coop
 // PMTiles archive at `./tiles/fields.pmtiles`. The upstream PMTiles was
 // produced by the fiboa publisher with source-layer `us_ca_scm` (NOT
-// the scaffold's default `fields`), so we override SOURCE_LAYER below.
+// the scaffold's default `fields`).
 //
-// Reads `tile.json` at runtime to fill the chrome. Paint mode is
-// `fill-outline` per the scaffold default — translucent cream fill,
-// crisp ink outline.
+// Sprint 19 fix-cycle: stopped fetching tile.json at runtime — the
+// iframe sandbox attribute drops same-origin, so the fetch failed with
+// an opaque-origin CORS reject and blanked the map. Chrome now lives in
+// the outer Next.js /sandbox/<slug>/ route. The iframe is just a canvas.
 
 const PMTILES_URL = "./tiles/fields.pmtiles";
 // Source-layer name from the upstream fiboa PMTiles (verified via the
@@ -16,7 +17,6 @@ const PMTILES_URL = "./tiles/fields.pmtiles";
 // re-encoding just to rename would defeat the point of reusing the
 // upstream PMTiles.
 const SOURCE_LAYER = "us_ca_scm";
-const TILE_JSON_URL = "./tile.json";
 
 // California-centric camera. Sets us up looking at the Central Valley
 // where the densest crop polygons live.
@@ -67,26 +67,7 @@ function paintLayers() {
   ];
 }
 
-async function loadTileMeta() {
-  const res = await fetch(TILE_JSON_URL);
-  if (!res.ok) throw new Error(`tile.json fetch ${res.status}`);
-  return res.json();
-}
-
-function fillChrome(meta) {
-  document.title = `${meta.name} — UFFDA Sandbox`;
-  document.getElementById("tile-title").textContent = meta.name;
-  document.getElementById("tile-tagline").textContent = meta.tagline ?? "";
-  document.getElementById("caveat").textContent = meta.description ?? "";
-  const authorName = meta.author?.name ?? "";
-  const licenseBits = [authorName, meta.license, meta.licenseNote].filter(Boolean);
-  document.getElementById("attribution-strip").textContent = licenseBits.join(" · ");
-}
-
-async function main() {
-  const meta = await loadTileMeta();
-  fillChrome(meta);
-
+function main() {
   const protocol = new pmtiles.Protocol();
   maplibregl.addProtocol("pmtiles", protocol.tile);
 
@@ -108,8 +89,8 @@ async function main() {
   map.addControl(new maplibregl.NavigationControl(), "top-right");
 }
 
-main().catch((err) => {
+try {
+  main();
+} catch (err) {
   console.error("[ca-scm] failed to mount:", err);
-  const caveat = document.getElementById("caveat");
-  if (caveat) caveat.textContent = `Tile failed to mount: ${err.message}`;
-});
+}

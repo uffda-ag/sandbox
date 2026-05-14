@@ -7,18 +7,19 @@
 // ingest.mjs). Clicking a pill pushes a `setFilter` against the layer
 // so the user sees only that state's fields. "All" clears the filter.
 //
-// Reads `tile.json` at runtime to fill the chrome (title, tagline,
-// caveat panel, attribution strip). Paint mode is `fill-outline` per
-// the scaffold default — translucent cream fill, crisp ink outline.
+// Sprint 19 fix-cycle: stopped fetching tile.json at runtime — the
+// iframe sandbox attribute drops same-origin, so the fetch failed with
+// an opaque-origin CORS reject and blanked the map. Chrome (title /
+// tagline / attribution) now lives in the outer Next.js sandbox route;
+// only the state-filter pill row remains in the iframe.
 
 const PMTILES_URL = "./tiles/fields.pmtiles";
 const SOURCE_LAYER = "fields";
-const TILE_JSON_URL = "./tile.json";
 
-// Corn Belt bounding box — covers IA + MN + WI + IL with a small pad.
-// Camera centers here on load; user can pan freely.
-const CORN_BELT_CENTER = [-91.5, 43.0];
-const CORN_BELT_ZOOM = 5.2;
+// Corn Belt framing — covers IA + MN + WI + IL.
+// ACPF sweet spot per the brief; user can pan freely.
+const CORN_BELT_CENTER = [-92, 42.5];
+const CORN_BELT_ZOOM = 5;
 
 const STYLE_BASE = {
   version: 8,
@@ -64,22 +65,6 @@ function paintLayers() {
   ];
 }
 
-async function loadTileMeta() {
-  const res = await fetch(TILE_JSON_URL);
-  if (!res.ok) throw new Error(`tile.json fetch ${res.status}`);
-  return res.json();
-}
-
-function fillChrome(meta) {
-  document.title = `${meta.name} — UFFDA Sandbox`;
-  document.getElementById("tile-title").textContent = meta.name;
-  document.getElementById("tile-tagline").textContent = meta.tagline ?? "";
-  document.getElementById("caveat").textContent = meta.description ?? "";
-  const authorName = meta.author?.name ?? "";
-  const licenseBits = [authorName, meta.license, meta.licenseNote].filter(Boolean);
-  document.getElementById("attribution-strip").textContent = licenseBits.join(" · ");
-}
-
 /** Wire the state-filter pill row. Clicking a pill toggles which state
  *  is shown — empty `data-state` means "all states", clears the filter. */
 function wireStateFilter(map) {
@@ -100,10 +85,7 @@ function wireStateFilter(map) {
   });
 }
 
-async function main() {
-  const meta = await loadTileMeta();
-  fillChrome(meta);
-
+function main() {
   const protocol = new pmtiles.Protocol();
   maplibregl.addProtocol("pmtiles", protocol.tile);
 
@@ -127,8 +109,8 @@ async function main() {
   map.on("load", () => wireStateFilter(map));
 }
 
-main().catch((err) => {
+try {
+  main();
+} catch (err) {
   console.error("[acpf-cornbelt] failed to mount:", err);
-  const caveat = document.getElementById("caveat");
-  if (caveat) caveat.textContent = `Tile failed to mount: ${err.message}`;
-});
+}

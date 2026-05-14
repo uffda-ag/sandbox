@@ -1,20 +1,24 @@
-// Sandbox boundary-tile renderer.
+// CropSight US sandbox-tile renderer.
 //
-// Reads `tile.json` (fetched at runtime) to populate the chrome, then
-// mounts a MapLibre map against `./tiles/fields.pmtiles`. Same-origin
-// fetch — the host (web/scripts/sync-sandbox-tiles.mjs) mirrors this
-// folder into web/public/tiles/iframe/<slug>/ at build time, so the
-// PMTiles archive is served alongside index.html.
+// Sprint 19 fix-cycle: simplified to mount the map directly with hard-coded
+// constants. Previously read `tile.json` at runtime to populate iframe
+// chrome (title/tagline/attribution), but the iframe sandbox attribute
+// drops same-origin, making the fetch fail with an opaque-origin CORS
+// reject — which killed the whole main() promise and left the map blank.
+// Chrome now lives only in the outer Next.js /sandbox/<slug>/ route,
+// which reads from the tile registry server-side. The iframe is just a
+// map canvas.
 //
 // Paint mode is taken from `document.body.dataset.paintMode`:
-//   - fill-outline (default): translucent fill + crisp outline.
-//   - sparse-markers: outline-only at 1.5px, low opacity. Use for
-//                     reference layers with sparse polygon coverage so
-//                     the basemap reads underneath.
+//   - fill-outline: translucent cream fill + crisp outline.
+//   - sparse-markers: outline-only at 1.5px, low opacity.
 
 const PMTILES_URL = "./tiles/fields.pmtiles";
 const SOURCE_LAYER = "fields";
-const TILE_JSON_URL = "./tile.json";
+
+// CONUS-wide framing — CropSight covers the lower 48.
+const CROPSIGHT_CENTER = [-96, 39];
+const CROPSIGHT_ZOOM = 4;
 
 const STYLE_BASE = {
   version: 8,
@@ -81,30 +85,7 @@ function paintLayersForMode(mode) {
   ];
 }
 
-async function loadTileMeta() {
-  const res = await fetch(TILE_JSON_URL);
-  if (!res.ok) throw new Error(`tile.json fetch ${res.status}`);
-  return res.json();
-}
-
-function fillChrome(meta) {
-  document.title = `${meta.name} — UFFDA Sandbox`;
-  document.getElementById("tile-title").textContent = meta.name;
-  document.getElementById("tile-tagline").textContent = meta.tagline ?? "";
-  document.getElementById("caveat").textContent = meta.description ?? "";
-  if (meta.licenseNote) {
-    document.getElementById("attribution-strip").textContent =
-      `${meta.author?.name ?? ""} · ${meta.license} · ${meta.licenseNote}`.trim();
-  } else {
-    document.getElementById("attribution-strip").textContent =
-      `${meta.author?.name ?? ""} · ${meta.license}`.trim();
-  }
-}
-
-async function main() {
-  const meta = await loadTileMeta();
-  fillChrome(meta);
-
+function main() {
   const paintMode = document.body.dataset.paintMode ?? "fill-outline";
 
   const protocol = new pmtiles.Protocol();
@@ -125,15 +106,13 @@ async function main() {
   new maplibregl.Map({
     container: "map",
     style,
-    center: [-93.5, 42.0],
-    zoom: 6,
+    center: CROPSIGHT_CENTER,
+    zoom: CROPSIGHT_ZOOM,
   });
 }
 
-main().catch((err) => {
-  console.error("[boundary-tile] failed to mount:", err);
-  const caveat = document.getElementById("caveat");
-  if (caveat) {
-    caveat.textContent = `Tile failed to mount: ${err.message}`;
-  }
-});
+try {
+  main();
+} catch (err) {
+  console.error("[cropsight-us] failed to mount:", err);
+}

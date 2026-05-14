@@ -11,22 +11,15 @@
     />
     <link rel="stylesheet" href="style.css" />
   </head>
+  <!--
+    Sprint 19 fix-cycle: stripped duplicative chrome (title, tagline,
+    caveat-panel, attribution). Outer Next.js /sandbox/<slug>/ route
+    already renders that from the tile registry, and the iframe runs
+    under sandbox="allow-scripts allow-popups" (no allow-same-origin)
+    which made the runtime tile.json fetch fail — blanking the map.
+  -->
   <body data-paint-mode="fill-outline">
-    <header class="hud">
-      <h1 class="hud-title" id="tile-title">California Statewide Crop Mapping</h1>
-      <p class="hud-tagline" id="tile-tagline"></p>
-    </header>
-
-    <main class="map-shell">
-      <div id="map" class="map"></div>
-
-      <aside class="caveat-panel" id="caveat" aria-live="polite"></aside>
-    </main>
-
-    <footer class="meta">
-      <span id="attribution-strip"></span>
-      <span class="powered-by">powered by uffda.ag</span>
-    </footer>
+    <div id="map" class="map"></div>
 
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <script src="https://unpkg.com/pmtiles@4.4.1/dist/pmtiles.js"></script>
