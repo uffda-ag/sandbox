@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>California Statewide Crop Mapping — UFFDA Sandbox</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body data-paint-mode="fill-outline">
+    <header class="hud">
+      <h1 class="hud-title" id="tile-title">California Statewide Crop Mapping</h1>
+      <p class="hud-tagline" id="tile-tagline"></p>
+    </header>
+
+    <main class="map-shell">
+      <div id="map" class="map"></div>
+
+      <aside class="caveat-panel" id="caveat" aria-live="polite"></aside>
+    </main>
+
+    <footer class="meta">
+      <span id="attribution-strip"></span>
+      <span class="powered-by">powered by uffda.ag</span>
+    </footer>
+
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/pmtiles@4.4.1/dist/pmtiles.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
