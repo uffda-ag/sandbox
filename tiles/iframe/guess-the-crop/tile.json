@@ -12,7 +12,7 @@
     "site": "https://uffda.ag"
   },
   "license": "MIT",
-  "featured": true,
+  "featured": false,
   "createdAt": "2026-05-12",
   "entry": "index.html"
 }
