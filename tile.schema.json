@@ -40,10 +40,12 @@
     },
     "status": {
       "type": "string",
+      "description": "Content readiness. coming-soon = idea, not started. in-dev = actively being built right now (never a placeholder). live = working + shown. retired = was live, now benched; kept for history, never `featured`, never re-marked in-dev. See structure.md 'Tile hygiene rules'.",
       "enum": [
         "coming-soon",
         "in-dev",
-        "live"
+        "live",
+        "retired"
       ]
     },
     "tagline": {
