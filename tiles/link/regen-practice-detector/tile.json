@@ -1,0 +1,25 @@
+{
+  "name": "Regenerative Practice Detector",
+  "slug": "regen-practice-detector",
+  "type": "link",
+  "status": "in-dev",
+  "tagline": "Detecting cover crop & tillage from free satellite data \u2014 open R&D.",
+  "description": "In-development open research into detecting field-scale regenerative practices (cover cropping, tillage/residue) using only free, open satellite data (Google Earth Engine; Sentinel-2/-1, Landsat, AlphaEarth). Includes a runnable notebook and an at-scale validation against the Minnesota Tillage Transect Survey (~42,000 ground-truth fields): cross-validated held-out AUC ~0.78-0.83 for tillage/residue, at or above the commercial benchmark. Development and records are kept in the open here; the work is early-stage.",
+  "icon": "build-it",
+  "tags": [
+    "cover-crop",
+    "tillage",
+    "earth-engine",
+    "sentinel-2",
+    "mrv",
+    "validation"
+  ],
+  "author": {
+    "name": "UFFDA contributors",
+    "github": "uffda-ag"
+  },
+  "license": "Apache-2.0",
+  "featured": false,
+  "createdAt": "2026-06-03",
+  "url": "https://github.com/uffda-ag/sandbox/tree/main/tiles/link/regen-practice-detector"
+}

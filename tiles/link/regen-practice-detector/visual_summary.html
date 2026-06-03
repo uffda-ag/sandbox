@@ -1,0 +1,34 @@
+<meta charset=utf-8>
+<style>
+ body{font-family:Segoe UI,-apple-system,Roboto,sans-serif;max-width:1000px;margin:32px auto;padding:0 20px;color:#1a1a1a;line-height:1.5}
+ h1{font-size:24px;margin-bottom:4px} .sub{color:#666;margin-top:0}
+ .kpis{display:flex;gap:14px;margin:20px 0;flex-wrap:wrap}
+ .kpi{flex:1;min-width:170px;background:#f5f7fa;border:1px solid #e0e4ea;border-radius:10px;padding:14px 16px}
+ .kpi .n{font-size:26px;font-weight:700;color:#0d47a1} .kpi .l{font-size:12.5px;color:#555;margin-top:2px}
+ img{max-width:100%;border:1px solid #e0e4ea;border-radius:8px;margin:8px 0}
+ .cap{font-size:13px;color:#555;margin:2px 0 22px}
+ .row{display:flex;gap:16px;flex-wrap:wrap} .row>div{flex:1;min-width:340px}
+</style>
+<h1>Regenerative-practice detection — visual summary</h1>
+<p class="sub">At-scale validation against real ground truth · 2026-06-03</p>
+
+<div class="kpis">
+  <div class="kpi"><div class="n">42,000</div><div class="l">real field observations (MN Tillage Transect, 67 counties)</div></div>
+  <div class="kpi"><div class="n">0.78&ndash;0.83</div><div class="l">held-out AUC (cross-validated, &plusmn;0.03)</div></div>
+  <div class="kpi"><div class="n">72&ndash;76%</div><div class="l">balanced accuracy on unseen counties</div></div>
+  <div class="kpi"><div class="n">&gt; ~63%</div><div class="l">meets/beats commercial tillage benchmark</div></div>
+</div>
+
+<img src="concept_diagram.png">
+<p class="cap"><b>The approach.</b> Free, open data end-to-end; the model is trained on some counties and graded on entirely separate ones, so the score reflects real generalization.</p>
+
+<div class="row">
+ <div>
+  <img src="cv_plot.png">
+  <p class="cap"><b>Cross-validated accuracy.</b> Each dot is one county-fold; bars are mean &plusmn; spread. Well above random (0.50) and the earlier 0.66 baseline, with a tight band.</p>
+ </div>
+ <div>
+  <img src="scoreboard_v2_plots.png">
+  <p class="cap"><b>Where it's right, and what drives it.</b> Confusion matrix on held-out counties (clear case) and the top features &mdash; note prior-crop conditioning (<code>resid_corn</code>) leads.</p>
+ </div>
+</div>
