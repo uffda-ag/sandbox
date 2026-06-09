@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Field Boundary Improver — UFFDA Sandbox</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
-  <!-- MapboxDraw for boundary correction drawing. Degrades gracefully if CDN unavailable. -->
-  <link rel="stylesheet" href="https://unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.css" />
+  <!-- No external draw library — draw engine is hand-rolled on MapLibre GeoJSON sources. -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <!--
@@ -15,7 +14,8 @@
   Engine: v6 cardinal-cut + jagged-FTW-outer, no smoothing.
   BETA: McLean IL pilot only; generalisation to other counties in progress.
   v2: humility reframe (likely-split/low-conf tiers, rot signal band not %),
-      boundary draw UI (MapboxDraw), verdict ingest via contact-form edge fn.
+      boundary draw UI (hand-rolled on MapLibre GeoJSON sources — no external lib),
+      verdict ingest via contact-form edge fn.
   User-facing strings: see STRINGS block in app.js; Voice Guardian gate pending.
 -->
 <body>
@@ -93,7 +93,7 @@
             <button class="draw-clear-btn" onclick="clearDraw()">Clear</button>
           </div>
           <div class="draw-hint" id="draw-hint" style="display:none;">
-            Draw a line or polygon showing where the boundary should be.
+            Click map to place points. Double-click to finish.
           </div>
           <div class="draw-status" id="draw-status"></div>
         </div>
@@ -140,8 +140,7 @@
   </div><!-- .shell -->
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
-  <!-- MapboxDraw: compatible with MapLibre GL JS via mapbox-gl-draw v1.4+ -->
-  <script src="https://unpkg.com/@mapbox/mapbox-gl-draw@1.4.3/dist/mapbox-gl-draw.js"></script>
+  <!-- No external draw library. Draw engine in app.js uses MapLibre GeoJSON sources natively. -->
   <script type="module" src="app.js"></script>
 </body>
 </html>

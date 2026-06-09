@@ -4,8 +4,10 @@
  * v2 changes:
  *  - HUMILITY REFRAME: "win/check" → "likely-split/low-confidence" tiers.
  *    rot_quality displayed as soft band (strong/moderate/weak), never bare %.
- *  - BOUNDARY DRAW UI: MapboxDraw (via unpkg) — "Draw correction" mode captures
- *    a reviewer-drawn corrected line/polygon as GeoJSON alongside the verdict.
+ *  - BOUNDARY DRAW UI: hand-rolled on MapLibre GeoJSON sources — no external draw
+ *    library. Click to place vertices, double-click to finish line. Works natively
+ *    with MapLibre GL 3.6.2. Replaces prior @mapbox/mapbox-gl-draw (incompatible
+ *    with MapLibre 3.x).
  *  - INGEST: verdict + drawn correction + field id POSTed to contact-form edge fn.
  *    contact-form is the right fit: public/anon, accepts structured message body.
  *    Client-side JSON export kept as belt-and-suspenders.
@@ -35,7 +37,7 @@
  *  STRINGS.keptSignalNote        = "Rotation is uniform across this field — kept as single unit."
  *  STRINGS.drawBtnStart          = "Draw correction"
  *  STRINGS.drawBtnStop           = "Done drawing"
- *  STRINGS.drawHint              = "Draw a line or polygon showing where the boundary should be."
+ *  STRINGS.drawHint              = "Click map to place points. Double-click to finish."
  *  STRINGS.drawCaptured          = "Correction captured — will include with your verdict."
  *  STRINGS.drawCleared           = "Drawing cleared."
  *  STRINGS.submitBtnLabel        = "Submit verdict"
@@ -61,7 +63,8 @@
  *  - contact-form does not have a dedicated boundary-feedback table; ground-truth
  *    rows land in contact_messages (source: "boundary-improver"). A proper
  *    boundary_feedback table would parse structured verdicts server-side — parked.
- *  - MapboxDraw CDN requires internet; draw feature degrades gracefully if unavailable.
+ *  - Draw engine is line-only (no polygon mode). A polygon draw mode would need a
+ *    closing-click heuristic; line captures the correction intent adequately for v2.
  */
 
 import { CASES } from "./data.js";
@@ -131,9 +134,15 @@ let activeVerdict = null;
 let mapView       = "refined";
 let useSat        = false;
 let map           = null;
-let drawControl   = null;
 let drawMode      = false;
 let drawnGeometry = null;
+
+// ── Hand-rolled draw engine state ─────────────────────────────────────────────
+// Uses MapLibre GeoJSON sources directly — no external draw library.
+// draw-preview source holds the in-progress line while drawing.
+// draw-final source holds the committed correction line.
+var _drawVertices  = [];   // [lng, lat] pairs for current in-progress line
+var _drawListeners = {};   // named map event listeners (for clean removal)
 
 // Feedback store — persisted to sessionStorage for export within the session.
 let feedback = {};
@@ -244,8 +253,64 @@ function addMapLayers() {
   map.addLayer({ id: "kept-fill", type: "fill", source: "kept-src", paint: { "fill-color": "#8b949e", "fill-opacity": 0.12 } });
   map.addLayer({ id: "kept-line", type: "line", source: "kept-src", paint: { "line-color": "#8b949e", "line-width": 2 } });
 
+  // Draw engine sources: preview (in-progress) + final (committed correction).
+  // Both are yellow (#facc15) to match the legend entry.
+  map.addSource("draw-preview", { type: "geojson", data: emptyFC() });
+  map.addLayer({
+    id: "draw-preview-line",
+    type: "line",
+    source: "draw-preview",
+    paint: {
+      "line-color": "#facc15",
+      "line-width": 2.5,
+      "line-dasharray": [4, 2],
+      "line-opacity": 0.85
+    }
+  });
+  map.addLayer({
+    id: "draw-preview-points",
+    type: "circle",
+    source: "draw-preview",
+    filter: ["==", "$type", "Point"],
+    paint: {
+      "circle-radius": 4,
+      "circle-color": "#facc15",
+      "circle-stroke-width": 1,
+      "circle-stroke-color": "#0d1117"
+    }
+  });
+
+  map.addSource("draw-final", { type: "geojson", data: emptyFC() });
+  map.addLayer({
+    id: "draw-final-line",
+    type: "line",
+    source: "draw-final",
+    paint: {
+      "line-color": "#facc15",
+      "line-width": 2.5,
+      "line-opacity": 0.9
+    }
+  });
+  map.addLayer({
+    id: "draw-final-points",
+    type: "circle",
+    source: "draw-final",
+    filter: ["==", "$type", "Point"],
+    paint: {
+      "circle-radius": 4,
+      "circle-color": "#facc15",
+      "circle-stroke-width": 1,
+      "circle-stroke-color": "#0d1117"
+    }
+  });
+
   // Re-apply active data if a field is already selected (after style swap)
   if (activeIdx !== null) applyMapData(CASES[activeIdx], mapView);
+
+  // Restore committed correction after style swap
+  if (drawnGeometry) {
+    _renderFinal(drawnGeometry);
+  }
 }
 
 function initMap() {
@@ -258,8 +323,6 @@ function initMap() {
   });
   map.on("load", function() {
     addMapLayers();
-    tryInitDraw();
-    setTimeout(checkDrawAvailable, 800);
   });
 }
 
@@ -269,139 +332,198 @@ window.toggleSat = function toggleSat() {
   var ctr = map.getCenter();
   var z   = map.getZoom();
 
-  // Preserve drawn features before style swap
-  var savedFeatures = null;
-  if (drawControl) {
-    try { savedFeatures = drawControl.getAll(); } catch (_) {}
+  // If in draw mode, cancel it cleanly before style swap
+  if (drawMode) {
+    _drawCancel();
   }
 
   map.setStyle(useSat ? SAT_STYLE : OSM_STYLE);
   map.once("styledata", function() {
+    // addMapLayers re-adds draw sources and restores drawnGeometry
     addMapLayers();
     map.setCenter(ctr);
     map.setZoom(z);
-
-    // Re-init draw (plugin needs re-add after style change)
-    if (window.MapboxDraw) {
-      if (drawControl) {
-        try { map.removeControl(drawControl); } catch (_) {}
-      }
-      tryInitDraw();
-      // Restore previously drawn features
-      if (savedFeatures && savedFeatures.features.length > 0) {
-        try { drawControl.set(savedFeatures); } catch (_) {}
-      }
-    }
   });
 };
 
-// ── Draw control ──────────────────────────────────────────────────────────────
+// ── Hand-rolled draw engine ───────────────────────────────────────────────────
+//
+// No external library. Uses MapLibre GeoJSON sources added in addMapLayers().
+// Workflow:
+//   1. toggleDraw()  → enter draw mode: cursor becomes crosshair, click adds vertices.
+//   2. Each click appends a vertex; preview source updates with current line + points.
+//   3. Double-click  → finish: commits the line to drawnGeometry + draw-final source,
+//                       clears preview, exits draw mode.
+//   4. toggleDraw() while active (Done button) → same finish behavior.
+//   5. clearDraw()   → wipes everything.
+//   Escape key also cancels mid-draw without committing.
 
-function tryInitDraw() {
-  if (!window.MapboxDraw) return;
-
-  drawControl = new MapboxDraw({
-    displayControlsDefault: false,
-    controls: { line_string: false, polygon: false, trash: false },
-    styles: [
-      {
-        id: "gl-draw-line",
-        type: "line",
-        filter: ["all", ["==", "$type", "LineString"], ["!=", "mode", "static"]],
-        paint: { "line-color": "#facc15", "line-width": 2.5, "line-dasharray": [3, 2] }
-      },
-      {
-        id: "gl-draw-line-static",
-        type: "line",
-        filter: ["all", ["==", "$type", "LineString"], ["==", "mode", "static"]],
-        paint: { "line-color": "#facc15", "line-width": 2, "line-opacity": 0.8 }
-      },
-      {
-        id: "gl-draw-polygon-fill",
-        type: "fill",
-        filter: ["all", ["==", "$type", "Polygon"], ["!=", "mode", "static"]],
-        paint: { "fill-color": "#facc15", "fill-opacity": 0.12 }
-      },
-      {
-        id: "gl-draw-polygon-stroke",
-        type: "line",
-        filter: ["all", ["==", "$type", "Polygon"], ["!=", "mode", "static"]],
-        paint: { "line-color": "#facc15", "line-width": 2 }
-      },
-      {
-        id: "gl-draw-point-outer",
-        type: "circle",
-        filter: ["all", ["==", "$type", "Point"], ["==", "meta", "vertex"]],
-        paint: { "circle-radius": 5, "circle-color": "#facc15" }
-      }
-    ]
-  });
-
-  map.addControl(drawControl);
-
-  map.on("draw.create", onDrawChange);
-  map.on("draw.update", onDrawChange);
-  map.on("draw.delete", onDrawClear);
-}
-
-function onDrawChange() {
-  if (!drawControl) return;
-  var fc = drawControl.getAll();
-  if (fc && fc.features.length > 0) {
-    drawnGeometry = fc;
-    var el = document.getElementById("draw-status");
-    el.textContent = "Correction captured — will include with your verdict.";
-    el.style.color = "#22c55e";
+function _drawPreviewFC() {
+  // Build a FeatureCollection with the current in-progress line + vertex points
+  // so the user sees both the line and each placed vertex.
+  var features = [];
+  if (_drawVertices.length >= 2) {
+    features.push({
+      type: "Feature",
+      geometry: { type: "LineString", coordinates: _drawVertices.slice() },
+      properties: {}
+    });
   }
+  _drawVertices.forEach(function(pt) {
+    features.push({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: pt },
+      properties: {}
+    });
+  });
+  return { type: "FeatureCollection", features: features };
 }
 
-function onDrawClear() {
-  drawnGeometry = null;
-  var el = document.getElementById("draw-status");
-  el.textContent = "Drawing cleared.";
-  el.style.color = "#8b949e";
+function _renderPreview() {
+  if (!map.getSource("draw-preview")) return;
+  map.getSource("draw-preview").setData(_drawPreviewFC());
+}
+
+function _renderFinal(fc) {
+  if (!map.getSource("draw-final")) return;
+  map.getSource("draw-final").setData(fc || emptyFC());
+}
+
+function _drawFinish() {
+  // Commit whatever vertices we have (need at least 2 for a line)
+  _drawListenersOff();
+  map.getCanvas().style.cursor = "";
+  map.doubleClickZoom.enable();
+  drawMode = false;
+
+  var btn  = document.getElementById("draw-btn");
+  var hint = document.getElementById("draw-hint");
+  if (btn)  { btn.textContent = "Draw correction"; btn.classList.remove("draw-active"); }
+  if (hint) hint.style.display = "none";
+
+  if (_drawVertices.length >= 2) {
+    var coords = _drawVertices.slice();
+    var fc = {
+      type: "FeatureCollection",
+      features: [{
+        type: "Feature",
+        geometry: { type: "LineString", coordinates: coords },
+        properties: {}
+      }]
+    };
+    drawnGeometry = fc;
+    // Clear preview, show final
+    if (map.getSource("draw-preview")) map.getSource("draw-preview").setData(emptyFC());
+    _renderFinal(fc);
+    var status = document.getElementById("draw-status");
+    if (status) {
+      status.textContent = "Correction captured — will include with your verdict.";
+      status.style.color = "#22c55e";
+    }
+  } else {
+    // Not enough points — cancel silently
+    if (map.getSource("draw-preview")) map.getSource("draw-preview").setData(emptyFC());
+    var status2 = document.getElementById("draw-status");
+    if (status2) {
+      status2.textContent = "";
+      status2.style.color = "#8b949e";
+    }
+  }
+  _drawVertices = [];
+}
+
+function _drawCancel() {
+  // Cancel without committing (Escape key or style swap)
+  _drawListenersOff();
+  map.getCanvas().style.cursor = "";
+  map.doubleClickZoom.enable();
+  drawMode = false;
+  _drawVertices = [];
+  if (map.getSource("draw-preview")) map.getSource("draw-preview").setData(emptyFC());
+  var btn  = document.getElementById("draw-btn");
+  var hint = document.getElementById("draw-hint");
+  if (btn)  { btn.textContent = "Draw correction"; btn.classList.remove("draw-active"); }
+  if (hint) hint.style.display = "none";
+}
+
+function _drawListenersOn() {
+  var lastClickTime = 0;
+
+  _drawListeners.click = function(e) {
+    var now = Date.now();
+    // Double-click guard: two clicks within 400ms = finish, not vertex
+    if (now - lastClickTime < 400) {
+      lastClickTime = 0;
+      _drawFinish();
+      return;
+    }
+    lastClickTime = now;
+    _drawVertices.push([e.lngLat.lng, e.lngLat.lat]);
+    _renderPreview();
+  };
+
+  _drawListeners.dblclick = function() {
+    // MapLibre fires dblclick after the two individual click events.
+    // The second click is already caught by the 400ms guard above,
+    // so by the time this fires drawMode may already be false.
+    // Fire _drawFinish as a safety net only if still active.
+    if (drawMode) {
+      _drawFinish();
+    }
+  };
+
+  _drawListeners.keydown = function(e) {
+    if (e.key === "Escape") _drawCancel();
+  };
+
+  map.on("click",    _drawListeners.click);
+  map.on("dblclick", _drawListeners.dblclick);
+  document.addEventListener("keydown", _drawListeners.keydown);
+}
+
+function _drawListenersOff() {
+  if (_drawListeners.click)   map.off("click",    _drawListeners.click);
+  if (_drawListeners.dblclick) map.off("dblclick", _drawListeners.dblclick);
+  if (_drawListeners.keydown) document.removeEventListener("keydown", _drawListeners.keydown);
+  _drawListeners = {};
 }
 
 window.toggleDraw = function toggleDraw() {
-  if (!drawControl) {
-    var el = document.getElementById("draw-status");
-    el.textContent = "Draw tool unavailable — reload with internet connection.";
-    el.style.color = "#f85149";
-    return;
-  }
-  drawMode = !drawMode;
-  var btn = document.getElementById("draw-btn");
   if (drawMode) {
-    drawControl.changeMode("draw_line_string");
-    btn.textContent = "Done drawing";
-    btn.classList.add("draw-active");
-    document.getElementById("draw-hint").style.display = "block";
+    // "Done drawing" — finish and commit whatever is in progress
+    map.doubleClickZoom.enable();
+    _drawFinish();
   } else {
-    drawControl.changeMode("simple_select");
-    btn.textContent = "Draw correction";
-    btn.classList.remove("draw-active");
-    document.getElementById("draw-hint").style.display = "none";
+    // Enter draw mode
+    drawMode = true;
+    _drawVertices = [];
+    map.getCanvas().style.cursor = "crosshair";
+    // Disable map's own dblclick-zoom so double-clicking to finish
+    // doesn't also zoom the map
+    map.doubleClickZoom.disable();
+    _drawListenersOn();
+    var btn = document.getElementById("draw-btn");
+    if (btn) { btn.textContent = "Done drawing"; btn.classList.add("draw-active"); }
+    var hint = document.getElementById("draw-hint");
+    if (hint) hint.style.display = "block";
+    var status = document.getElementById("draw-status");
+    if (status) { status.textContent = ""; status.style.color = "#8b949e"; }
   }
 };
 
 window.clearDraw = function clearDraw() {
-  if (drawControl) {
-    try {
-      drawControl.deleteAll();
-      drawControl.changeMode("simple_select");
-    } catch (_) {}
-  }
+  if (drawMode) _drawCancel();
   drawnGeometry = null;
+  _drawVertices = [];
+  if (map.getSource("draw-preview")) map.getSource("draw-preview").setData(emptyFC());
+  if (map.getSource("draw-final"))   map.getSource("draw-final").setData(emptyFC());
   drawMode = false;
   var btn = document.getElementById("draw-btn");
-  if (btn) {
-    btn.textContent = "Draw correction";
-    btn.classList.remove("draw-active");
-  }
+  if (btn) { btn.textContent = "Draw correction"; btn.classList.remove("draw-active"); }
   var hint = document.getElementById("draw-hint");
   if (hint) hint.style.display = "none";
   var status = document.getElementById("draw-status");
-  if (status) { status.textContent = ""; status.style.color = "#8b949e"; }
+  if (status) { status.textContent = "Drawing cleared."; status.style.color = "#8b949e"; }
 };
 
 // ── Map data ──────────────────────────────────────────────────────────────────
@@ -824,27 +946,6 @@ window.exportFeedback = function exportFeedback() {
   URL.revokeObjectURL(url);
   setStatus("Exported " + payload.length + " verdicts", "#8b949e");
 };
-
-// ── Draw availability check ───────────────────────────────────────────────────
-// MapboxDraw is loaded in index.html from unpkg.
-// If CDN failed (no internet), draw UI degrades gracefully.
-
-function checkDrawAvailable() {
-  if (!window.MapboxDraw) {
-    var drawSec = document.getElementById("draw-sec");
-    if (drawSec) drawSec.style.opacity = "0.45";
-    var btn = document.getElementById("draw-btn");
-    if (btn) {
-      btn.title    = "Draw tool unavailable — no internet connection";
-      btn.disabled = true;
-    }
-    var status = document.getElementById("draw-status");
-    if (status) {
-      status.textContent = "Draw tool not loaded — check connection and reload.";
-      status.style.color = "#e3b341";
-    }
-  }
-}
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 

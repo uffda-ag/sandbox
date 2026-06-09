@@ -496,8 +496,4 @@ html, body {
   .sidebar { flex: 0 0 160px; }
 }
 
-/* ── MapboxDraw dark-theme overrides ─────────────────────────────────── */
-.mapboxgl-ctrl-group {
-  background: rgba(22, 27, 34, 0.92) !important;
-  border-color: #30363d !important;
-}
+/* Hand-rolled draw engine — no external library CSS needed. */
