@@ -1,0 +1,19 @@
+{
+  "name": "Field Boundary Improver",
+  "slug": "boundary-improver",
+  "type": "iframe",
+  "status": "in-dev",
+  "tagline": "When two fields get mapped as one, crop-rotation history splits them back apart. BETA.",
+  "description": "Uses 8 years of USDA Cropland Data Layer (CDL) rotation history to find FTW global field boundaries where two fields have been lumped into one polygon. 71 McLean County IL fields reviewed: 56 splits found, 10 kept as-is, 5 flagged for geometry check. Splits are snapped to the PLSS cardinal grid. This tool shows the FTW original vs the refined split on satellite, with the rotation-divergence signal that placed the boundary. Data-quality signal, not a production boundary layer.",
+  "icon": "globe",
+  "tags": ["boundary", "ftw", "cdl", "corn-belt", "rotation", "beta"],
+  "author": {
+    "name": "UFFDA core",
+    "site": "https://uffda.ag"
+  },
+  "license": "MIT",
+  "licenseNote": "Tile code MIT. FTW boundaries: CC-BY-4.0 (Regrow Ag / World Resources Institute). CDL: USDA NASS public domain.",
+  "featured": false,
+  "createdAt": "2026-06-09",
+  "entry": "index.html"
+}
