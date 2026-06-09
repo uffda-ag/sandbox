@@ -54,6 +54,10 @@
  * Known limitations:
  *  - McLean County IL only; generalisation to other counties in progress.
  *  - 3-zone under-catch: splitter finds 2 pieces where 3 are warranted.
+ *  - contact-form has verify_jwt:true; the tile uses the public anon key as a bearer
+ *    token (same key as NEXT_PUBLIC_SUPABASE_ANON_KEY — no elevated privileges).
+ *  - contact-form CORS ALLOWED_ORIGIN = "https://uffda.ag". Fetch from localhost will
+ *    be blocked by browser CORS preflight — expected. Works correctly in production.
  *  - contact-form does not have a dedicated boundary-feedback table; ground-truth
  *    rows land in contact_messages (source: "boundary-improver"). A proper
  *    boundary_feedback table would parse structured verdicts server-side — parked.
@@ -64,10 +68,14 @@ import { CASES } from "./data.js";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-// contact-form edge function endpoint — anon-invokable, no auth required.
+// contact-form edge function endpoint.
+// verify_jwt: true — requires anon key bearer token (public key, already in client JS).
 // Source tag identifies this as boundary-improver feedback in contact_messages.
-const FEEDBACK_ENDPOINT = "https://pfjfqvnoqeiedrjblngi.supabase.co/functions/v1/contact-form";
+const FEEDBACK_ENDPOINT = "https://ivjogpfjdtdppzncjumr.supabase.co/functions/v1/contact-form";
 const FEEDBACK_SOURCE   = "boundary-improver";
+// Supabase anon key — public by design (NEXT_PUBLIC_SUPABASE_ANON_KEY). Used only
+// to satisfy verify_jwt:true on the contact-form function. No elevated privileges.
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2am9ncGZqZHRkcHB6bmNqdW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTgzMzgsImV4cCI6MjA5MDU3NDMzOH0.33DJ2sS7ovtJOr_uzOJ74LsV_fFeLmub1zrIQJ--cZ4";
 
 // ── Storage key ───────────────────────────────────────────────────────────────
 const STORAGE_KEY = "boundary_improver_feedback_v2";
@@ -750,7 +758,10 @@ window.submitFeedback = async function submitFeedback() {
   try {
     var res = await fetch(FEEDBACK_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+      },
       body: JSON.stringify({
         from_email: "sandbox@uffda.ag",
         from_name:  "Boundary Improver Tile",
