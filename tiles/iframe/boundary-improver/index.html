@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Field Boundary Improver — UFFDA Sandbox</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<!--
+  Boundary Improver tile — v6 evidence panel adapted for the Sandbox.
+  Data: 71 McLean County IL FTW fields, CDL 2016-2023 8-yr rotation.
+  Engine: v6 cardinal-cut + jagged-FTW-outer, no smoothing.
+  BETA: McLean IL pilot only; generalisation to other counties in progress.
+  User-facing strings: see strings_boundary_improver_tile.py in the pipeline repo.
+-->
+<body>
+  <div class="shell">
+
+    <!-- Top bar: badges only (tile chrome lives in outer Next.js sandbox route) -->
+    <div class="topbar">
+      <span class="topbar-title">McLean County, IL — pilot</span>
+      <span class="topbar-meta">FTW 2024 &bull; CDL 2016–2023</span>
+      <span class="badge badge-beta">BETA</span>
+      <span id="badge-wins" class="badge badge-win">— wins</span>
+      <span id="badge-checks" class="badge badge-check">— checks</span>
+      <span id="badge-kept" class="badge badge-kept">— kept</span>
+    </div>
+
+    <div class="main">
+
+      <!-- Sidebar: field list by category -->
+      <div class="sidebar">
+        <div class="section-label win">Split wins — inspect</div>
+        <div id="list-wins"></div>
+        <div class="section-label check">Checks — geometry flag</div>
+        <div id="list-checks"></div>
+        <div class="section-label kept">Kept as-is</div>
+        <div id="list-kept"></div>
+      </div>
+
+      <!-- Map pane -->
+      <div class="map-pane">
+        <div id="map"></div>
+
+        <!-- FTW vs Refined toggle (hidden until a split case is selected) -->
+        <div class="view-toggle" id="view-toggle" style="display:none;">
+          <button class="vt-btn active-refined" id="btn-refined" onclick="setView('refined')">Refined (split)</button>
+          <span style="font-size:10px;color:#6e7681;padding:0 3px;">vs</span>
+          <button class="vt-btn" id="btn-ftw" onclick="setView('ftw')">FTW original</button>
+        </div>
+
+        <button class="sat-toggle" id="sat-toggle" onclick="toggleSat()">Satellite</button>
+
+        <div class="legend">
+          <div class="lg-row"><div class="lg-sw" style="border-color:#f97316;background:rgba(249,115,22,0.2);"></div>FTW original</div>
+          <div class="lg-row"><div class="lg-sw" style="border-color:#22c55e;background:rgba(34,197,94,0.2);"></div>Piece 1</div>
+          <div class="lg-row"><div class="lg-sw" style="border-color:#60a5fa;background:rgba(96,165,250,0.2);"></div>Piece 2</div>
+          <div class="lg-row"><div class="lg-sw" style="border-color:#8b949e;background:rgba(139,148,158,0.15);"></div>Kept</div>
+        </div>
+      </div>
+
+      <!-- Detail panel -->
+      <div class="detail">
+
+        <!-- Feedback capture -->
+        <div class="dp-sec">
+          <h3>Your verdict</h3>
+          <div class="verdict-row">
+            <button class="vbtn" id="v-right"  onclick="setVerdict('right')">Looks right</button>
+            <button class="vbtn" id="v-wrong"  onclick="setVerdict('wrong')">Wrong split</button>
+            <button class="vbtn" id="v-unsure" onclick="setVerdict('unsure')">Unsure</button>
+          </div>
+          <textarea class="note-fld" id="note-fld" placeholder="Optional note (e.g. 'split line right but slightly offset')"></textarea>
+          <button class="save-btn" onclick="saveFeedback()">Save verdict</button>
+          <button class="exp-btn" onclick="exportFeedback()">Export all feedback (JSON)</button>
+          <div class="save-status" id="save-status"></div>
+        </div>
+
+        <!-- Split signal explanation -->
+        <div class="dp-sec" id="signal-sec">
+          <h3>Why was this boundary placed here?</h3>
+          <div id="signal-content"><span style="font-size:11px;color:#6e7681;">Select a field from the sidebar.</span></div>
+        </div>
+
+        <!-- Rotation quality -->
+        <div class="dp-sec" id="quality-sec">
+          <h3>Rotation signal strength</h3>
+          <div id="quality-content"><span style="font-size:11px;color:#6e7681;">Select a field.</span></div>
+        </div>
+
+        <!-- CDL rotation strips -->
+        <div class="dp-sec" id="cdl-sec">
+          <h3>Crop history by piece (CDL 2016–2023)</h3>
+          <div id="cdl-content"><span style="font-size:11px;color:#6e7681;">Select a split case.</span></div>
+        </div>
+
+        <!-- Geometry details -->
+        <div class="dp-sec" id="geom-sec">
+          <h3>Geometry details</h3>
+          <div id="geom-content"><span style="font-size:11px;color:#6e7681;">Select a field.</span></div>
+        </div>
+
+        <!-- About this tile -->
+        <div class="dp-sec">
+          <h3>About this tool</h3>
+          <div style="font-size:10px;color:#8b949e;line-height:1.6;">
+            <p style="margin-bottom:5px;">FTW global field boundaries sometimes lump two fields with different crop rotations into one polygon. This tool splits them using 8 years of USDA CDL history.</p>
+            <p style="margin-bottom:5px;">Split lines snap to the PLSS cardinal grid. The signal is rotation divergence — years where the two zones grew different crops.</p>
+            <p style="color:#6e7681;">McLean County IL pilot. Engine v6 — no smoothing, raw FTW outer boundary preserved. FTW: CC-BY-4.0 (Regrow/WRI). CDL: USDA NASS public domain.</p>
+          </div>
+        </div>
+
+      </div><!-- .detail -->
+    </div><!-- .main -->
+  </div><!-- .shell -->
+
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
