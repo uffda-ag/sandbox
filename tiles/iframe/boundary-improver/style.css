@@ -1,8 +1,15 @@
 /*
- * Field Boundary Improver — sandbox tile styles.
+ * Field Boundary Improver — sandbox tile styles v2.
  *
  * Layout: full-height three-pane (sidebar | map | detail).
  * Satellite-dark theme to match the evidence-panel aesthetic.
+ *
+ * v2 changes:
+ *  - Tier classes: badge-likely, badge-lowconf replacing badge-win, badge-check.
+ *    badge-kept updated: neutral gray, NOT blue (blue collides with split piece 2).
+ *  - Draw UI classes: .draw-btn, .draw-clear-btn, .draw-hint, .draw-status.
+ *  - Signal disclaimer classes: .signal-disclaimer, .likely-disc, .lowconf-disc.
+ *  - Section label classes: .likely, .lowconf replacing .win, .check.
  */
 
 *, *::before, *::after {
@@ -63,11 +70,18 @@ html, body {
   white-space: nowrap;
 }
 
-.badge-beta   { background: #2d1f3d; color: #c084fc; border: 1px solid #7c3aed; }
-.badge-win    { background: #1a3a1a; color: #3fb950; border: 1px solid #238636; }
-.badge-check  { background: #3a2a1a; color: #e3b341; border: 1px solid #d29922; }
-.badge-kept   { background: #1a2a3a; color: #58a6ff; border: 1px solid #1f6feb; }
-.badge-stat   { background: #21262d; color: #8b949e; border: 1px solid #30363d; }
+.badge-beta    { background: #2d1f3d; color: #c084fc; border: 1px solid #7c3aed; }
+
+/* LIKELY SPLIT — green (high rotation signal) */
+.badge-likely  { background: #1a3a1a; color: #3fb950; border: 1px solid #238636; }
+
+/* LOW CONFIDENCE — amber/orange (weaker signal or geometry flag) */
+.badge-lowconf { background: #3a2a1a; color: #f59e0b; border: 1px solid #d97706; }
+
+/* KEPT — neutral gray, explicitly NOT blue (blue = split piece 2 on the map) */
+.badge-kept    { background: #21262d; color: #8b949e; border: 1px solid #444c56; }
+
+.badge-stat    { background: #21262d; color: #8b949e; border: 1px solid #30363d; }
 
 /* ── Main (sidebar + map + detail) ─────────────────────────────────────── */
 
@@ -100,9 +114,9 @@ html, body {
   border-bottom: 1px solid #21262d;
 }
 
-.section-label.win   { color: #3fb950; }
-.section-label.check { color: #e3b341; }
-.section-label.kept  { color: #6e7681; }
+.section-label.likely  { color: #3fb950; }
+.section-label.lowconf { color: #f59e0b; }
+.section-label.kept    { color: #6e7681; }
 
 .field-item {
   padding: 7px 10px;
@@ -240,6 +254,28 @@ html, body {
   margin-bottom: 7px;
 }
 
+/* ── Signal disclaimers ──────────────────────────────────────────────────── */
+
+.signal-disclaimer {
+  font-size: 10px;
+  padding: 5px 7px;
+  border-radius: 4px;
+  margin-bottom: 7px;
+  line-height: 1.5;
+}
+
+.likely-disc {
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  color: #b7f5c9;
+}
+
+.lowconf-disc {
+  background: rgba(245, 158, 11, 0.07);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #fde68a;
+}
+
 /* ── Rotation signal ─────────────────────────────────────────────────────── */
 
 .signal-box {
@@ -263,7 +299,7 @@ html, body {
 
 .div-yr { color: #8b949e; min-width: 32px; flex-shrink: 0; }
 
-/* ── Rotation quality bar ────────────────────────────────────────────────── */
+/* ── Rotation signal bar ─────────────────────────────────────────────────── */
 
 .qbar-row {
   display: flex;
@@ -272,10 +308,11 @@ html, body {
   margin-bottom: 5px;
 }
 
-.qbar-lbl { font-size: 10px; color: #8b949e; min-width: 86px; }
-.qbar-bg  { flex: 1; height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; }
+.qbar-lbl  { font-size: 10px; color: #8b949e; min-width: 86px; }
+.qbar-bg   { flex: 1; height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; }
 .qbar-fill { height: 100%; border-radius: 3px; }
-.qbar-val { font-size: 10px; font-family: monospace; min-width: 32px; text-align: right; }
+/* Value shows soft band word (strong/moderate/weak), not a bare % */
+.qbar-val  { font-size: 10px; font-family: monospace; min-width: 54px; text-align: right; }
 
 /* ── CDL strips ─────────────────────────────────────────────────────────── */
 
@@ -337,6 +374,7 @@ html, body {
 
 .note-fld:focus { outline: none; border-color: #58a6ff; }
 
+/* Submit = primary action */
 .save-btn {
   margin-top: 5px;
   width: 100%;
@@ -350,7 +388,8 @@ html, body {
   font-weight: 500;
 }
 
-.save-btn:hover { background: #388bfd; }
+.save-btn:hover    { background: #388bfd; }
+.save-btn:disabled { background: #21262d; color: #6e7681; cursor: not-allowed; }
 
 .exp-btn {
   margin-top: 3px;
@@ -374,6 +413,60 @@ html, body {
   min-height: 13px;
 }
 
+/* ── Draw correction UI ──────────────────────────────────────────────────── */
+
+.draw-btn {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 1px solid #30363d;
+  background: #21262d;
+  color: #c9d1d9;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.draw-btn:hover    { border-color: #facc15; color: #facc15; }
+.draw-btn.draw-active {
+  background: rgba(250, 204, 21, 0.12);
+  border-color: #facc15;
+  color: #facc15;
+  font-weight: 600;
+}
+.draw-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.draw-clear-btn {
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 1px solid #30363d;
+  background: #21262d;
+  color: #8b949e;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.draw-clear-btn:hover { background: #30363d; color: #c9d1d9; }
+
+.draw-hint {
+  font-size: 10px;
+  color: #facc15;
+  padding: 4px 6px;
+  background: rgba(250, 204, 21, 0.06);
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.draw-status {
+  font-size: 10px;
+  color: #8b949e;
+  min-height: 13px;
+  margin-top: 2px;
+}
+
 /* ── Geometry details ─────────────────────────────────────────────────────── */
 
 .plss-tag {
@@ -392,8 +485,8 @@ html, body {
   padding: 1px 5px;
   border-radius: 4px;
   background: #3a2a1a;
-  color: #e3b341;
-  border: 1px solid #d29922;
+  color: #f59e0b;
+  border: 1px solid #d97706;
 }
 
 /* ── Responsive: collapse detail on narrow viewports ──────────────────── */
@@ -401,4 +494,10 @@ html, body {
 @media (max-width: 700px) {
   .detail { display: none; }
   .sidebar { flex: 0 0 160px; }
+}
+
+/* ── MapboxDraw dark-theme overrides ─────────────────────────────────── */
+.mapboxgl-ctrl-group {
+  background: rgba(22, 27, 34, 0.92) !important;
+  border-color: #30363d !important;
 }
