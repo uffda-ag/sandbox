@@ -11,7 +11,7 @@
     "name": "UFFDA core",
     "site": "https://uffda.ag"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "featured": false,
   "createdAt": "2026-05-12",
   "entry": "index.html"

@@ -11,8 +11,8 @@
     "name": "UFFDA core",
     "site": "https://uffda.ag"
   },
-  "license": "MIT",
-  "licenseNote": "Tile code MIT. FTW boundaries: CC-BY-4.0 (Regrow Ag / World Resources Institute). CDL: USDA NASS public domain.",
+  "license": "Apache-2.0",
+  "licenseNote": "Tile code Apache-2.0. FTW boundaries: CC-BY-4.0 (Regrow Ag / World Resources Institute). CDL: USDA NASS public domain.",
   "featured": false,
   "createdAt": "2026-06-09",
   "entry": "index.html"
