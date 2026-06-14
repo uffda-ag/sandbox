@@ -4,7 +4,7 @@
   "type": "iframe",
   "status": "live",
   "tagline": "Sparse research-grade reference fields, CONUS 2013–2023.",
-  "description": "124,419 validated field polygons across CONUS, 2013-2023. Crop identity from Google Street View (97.2% accuracy); boundary delineation from Sentinel-2 (98.0% F1). 17 crop types, 294 Agricultural Statistics Districts. Ground-truth-quality where present, NOT a wall-to-wall paint layer — use as a reference to spot-check against, not as a coverage source. UIUC research; ESSD 2026 paper (Copernicus); Zenodo DOI 10.5281/zenodo.15702414.",
+  "description": "124,419 validated field polygons across CONUS, 2013-2023. Crop identity from Google Street View (97.2% accuracy); boundary delineation from Sentinel-2 (98.0% F1). 17 crop types, 294 Agricultural Statistics Districts. Ground-truth-quality where present, NOT a wall-to-wall paint layer — use as a reference to spot-check against, not as a coverage source. UIUC research; ESSD 2026 paper (Copernicus); Zenodo DOI 10.5281/zenodo.19501943.",
   "icon": "globe",
   "tags": ["boundary", "reference", "conus", "sentinel-2", "cropsight", "essd"],
   "author": {

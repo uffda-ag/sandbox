@@ -51,7 +51,7 @@
  *  STRINGS.savedAt               = "Saved {time}"
  *  STRINGS.betaDisclaimer        = "These are SUGGESTIONS for human review, not verified boundaries. About ~2/3 of high-signal split suggestions are correct — the rotation signal tells us the split is likely, not certain."
  *  STRINGS.aboutText             = "Fields of The World (FTW) global field boundaries sometimes lump two fields with different crop rotations into one polygon. This tool splits them using 8 years of USDA CDL history. Split lines snap to the PLSS cardinal grid. The signal is rotation divergence — years where the two zones grew different crops."
- *  STRINGS.aboutFooter           = "McLean County IL pilot. Engine v6 — no smoothing, raw FTW outer boundary preserved. FTW: CC-BY-4.0 (Regrow/WRI). CDL: USDA NASS public domain."
+ *  STRINGS.aboutFooter           = "McLean County IL pilot. Engine v6 — no smoothing, raw FTW outer boundary preserved. FTW field boundaries: CC-BY-4.0 (Fields of The World · Taylor Geospatial). CDL: USDA NASS public domain."
  *
  * Known limitations:
  *  - McLean County IL only; generalisation to other counties in progress.

@@ -12,7 +12,7 @@
     "site": "https://uffda.ag"
   },
   "license": "Apache-2.0",
-  "licenseNote": "Tile code Apache-2.0. FTW boundaries: CC-BY-4.0 (Regrow Ag / World Resources Institute). CDL: USDA NASS public domain.",
+  "licenseNote": "Tile code Apache-2.0. FTW boundaries: CC-BY-4.0 (Fields of The World · Taylor Geospatial / Microsoft AI for Good Lab / ASU Kerner Lab). CDL: USDA NASS public domain.",
   "featured": false,
   "createdAt": "2026-06-09",
   "entry": "index.html"
